@@ -7,10 +7,15 @@
 
 #include "Layer.h"
 
-Layer::Layer() {
-	// TODO Auto-generated constructor stub
+
+Layer::Layer(int fd, long tout) : Callback(fd, tout), _upper(nullptr), _lower(nullptr) {
 
 }
+
+Layer::Layer(long tout) : Callback(tout), _upper(nullptr), _lower(nullptr) {
+
+}
+
 
 Layer::~Layer() {
 	// TODO Auto-generated destructor stub

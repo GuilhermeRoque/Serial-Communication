@@ -1,24 +1,21 @@
 #include <iostream>
 #include "Serial.h"
 #include "Framming.h"
+#include "Poller.h"
 
 using namespace std;
 
 int main() {
-    char buf[2048];
+    char buf[1024];
     Serial rf("/dev/pts/3", B9600);
-    Framming framming(rf, 1, 2048);
+    Framming framming(rf, 1024, 1000);
 
-    while (true) {
-        memset(buf, 0, sizeof(buf));
+    Poller sched;
+    sched.adiciona(&framming);
 
-    	int rec_bytes = framming.receive(buf);
-    	cout << "Recebeu: " << buf << endl;
-    	buf[rec_bytes] = '\n';
-    	framming.send(buf, rec_bytes+1);
-    	cout << "Enviado.\n";
-    }
+    framming.init();
 
+    sched.despache();
 
     return 0;
 }
