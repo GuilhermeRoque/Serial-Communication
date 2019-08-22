@@ -12,8 +12,8 @@
 
 class CallbackTun : public Layer{
 public:
-	CallbackTun();
-	virtual ~CallbackTun();
+    CallbackTun();
+    virtual ~CallbackTun();
 };
 
 #endif /* CALLBACKTUN_H_ */

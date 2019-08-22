@@ -7,12 +7,7 @@
 
 #include "CallbackTun.h"
 
-CallbackTun::CallbackTun() {
-	// TODO Auto-generated constructor stub
-
-}
 
 CallbackTun::~CallbackTun() {
-	// TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
 }
-

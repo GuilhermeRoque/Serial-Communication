@@ -18,6 +18,5 @@ Layer::Layer(long tout) : Callback(tout), _upper(nullptr), _lower(nullptr) {
 
 
 Layer::~Layer() {
-	// TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
 }
-

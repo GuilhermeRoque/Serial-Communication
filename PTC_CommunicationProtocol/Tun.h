@@ -6,7 +6,7 @@
  */
 
 #ifndef TUN_H
-#define	TUN_H
+#define TUN_H
 
 #include <net/if.h>
 #include "Definitions.h"
@@ -62,4 +62,4 @@ private:
     void setip();
 };
 
-#endif	/* TUN_H */
+#endif  /* TUN_H */

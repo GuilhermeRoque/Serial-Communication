@@ -12,23 +12,23 @@
 
 class Layer : public Callback {
 public:
-	Layer(int fd, long tout);
-	Layer(long tout);
-	virtual ~Layer();
+    Layer(int fd, long tout);
+    Layer(long tout);
+    virtual ~Layer();
 
-	void set_upper(Layer *upper) { _upper = upper; }
-	void set_lower(Layer *lower) { _lower = lower; }
+    void set_upper(Layer *upper) { _upper = upper; }
+    void set_lower(Layer *lower) { _lower = lower; }
 
-	virtual void init() = 0;
+    virtual void init() = 0;
 
-	// envia dados vindos da camada superior
-	virtual void send(char *ptr, int len) = 0;
+    // envia dados vindos da camada superior
+    virtual void send(char *ptr, int len) = 0;
 
-	// notificação vinda da camada inferior sobre a chegada de
-	virtual void notify(char *ptr, int len) = 0;
+    // notificação vinda da camada inferior sobre a chegada de
+    virtual void notify(char *ptr, int len) = 0;
 
 private:
-	Layer *_upper, *_lower;
+    Layer *_upper, *_lower;
 
 };
 

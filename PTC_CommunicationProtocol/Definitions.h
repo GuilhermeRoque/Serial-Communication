@@ -6,7 +6,7 @@
  */
 
 #ifndef DEFINITIONS_H
-#define	DEFINITIONS_H
+#define DEFINITIONS_H
 
 #define MTU 256
 #define MASK "255.255.255.252"
@@ -18,4 +18,4 @@
 #define QueueLen 10 // comprimento da fila da tun (txqueue)
 #define MAX_SERIAL_BYTES 64
 
-#endif	/* DEFINITIONS_H */
+#endif  /* DEFINITIONS_H */
