@@ -9,8 +9,9 @@
 #include <string.h>
 #include <iostream>
 #include "Serial.h"
+#include "Layer.h"
 
-class Framming {
+class Framming : public Layer {
 public:
     Framming(Serial & dev, int min_bytes, int max_bytes);
     ~Framming();
@@ -23,12 +24,31 @@ public:
     // retorna o tamanho do quadro recebido
     int receive(char * buffer);
 
+    // os tratadores de eventos chamados pelo poller
+    void handle();
+    void handle_timeout();
+
 private:
     int _min_bytes, _max_bytes; // tamanhos mínimo e máximo de quadro
     Serial & _port;
     char _buffer[4096]; // quadros no maximo de 4 kB (hardcoded)
 
     enum States {Ocioso, RX, ESC};
+
+    // tipos de eventos associados à serial
+    enum TipoEvento {Dado, Timeout};
+
+    // tipo Evento: representa um evento
+    struct Evento {
+      TipoEvento tipo;
+      uint8_t octeto;
+
+      // este construtor cria um Evento do tipo Timeout
+      Evento(): tipo(Timeout) {}
+
+      // este construtor cria um Evento do tipo Dado
+      Evento(uint8_t x): tipo(Dado), octeto(x) {}
+    };
 
     // bytes recebidos pela MEF até o momento
     int _nbytes;

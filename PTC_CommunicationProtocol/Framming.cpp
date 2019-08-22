@@ -18,7 +18,7 @@ Framming::~Framming() {
 }
 
 void Framming::send(char *buffer, int bytes) {
-
+	_port.write(buffer, bytes);
 }
 
 int Framming::receive(char *buffer) {
