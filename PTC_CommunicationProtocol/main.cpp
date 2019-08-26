@@ -1,16 +1,21 @@
 #include <iostream>
 #include "Serial.h"
 #include "Framming.h"
+#include "Poller.h"
 
 using namespace std;
 
 int main() {
-    char buf[2048];
-    Serial rf("/dev/pts/5", B9600);
-    Framming framming(rf, 1, 2048);
-    framming.receive(buf);
+    char buf[1024];
+    Serial rf("/dev/pts/7", B9600);
+    Framming framming(rf, 1024, 1000);
 
-    cout << "Recebeu: " << buf << endl;
+    Poller sched;
+    sched.adiciona(&framming);
+
+    framming.init();
+
+    sched.despache();
 
     return 0;
 }

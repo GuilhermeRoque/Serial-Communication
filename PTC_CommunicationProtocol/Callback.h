@@ -1,3 +1,19 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/*
+ * File:   Callback.h
+ * Author: msobral
+ *
+ * Created on 20 de Setembro de 2018, 13:41
+ */
+
+#ifndef CALLBACK_H
+#define CALLBACK_H
+
 // classe abstrata para os callbacks do poller
 class Callback {
 public:
@@ -9,8 +25,6 @@ public:
     // out: timeout
     Callback(long tout);
 
-    virtual ~Callback();
-
     // ao especializar esta classe, devem-se implementar estes dois métodos !
     // handle: trata o evento representado neste callback
     // handle_timeout: trata o timeout associado a este callback
@@ -21,28 +35,17 @@ public:
     // necessário para poder diferenciar callbacks ...
     virtual bool operator==(const Callback & o) const;
 
-    // getter para o descritor de arquivo a ser monitorado
     int filedesc() const;
-
-    // getter do valor de timeout remanescente
     int timeout() const;
-
-    // ajusta timeout restante
-    void update(long dt);
-
-    // recarrega valor de timeout inicial
+    void update(long dt); // ajusta timeout restante
     void reload_timeout();
-
-    // desativa timeout
     void disable_timeout();
-
-    // reativa timeout
     void enable_timeout();
-
-    bool timeout_enabled() { return base_tout > 0; }
-
+    bool timeout_enabled() const { return enabled_to;}
 protected:
     int fd; // se < 0, este callback se torna um simples timer
     long tout;
     long base_tout;// milissegundos. Se <= 0, este callback não tem timeout
+    bool enabled_to;
 };
+#endif /* CALLBACK_H */
