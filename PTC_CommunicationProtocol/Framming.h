@@ -67,6 +67,20 @@ private:
     // retorna true se reconheceu um quadro completo
     bool _handle_fsm(Event & ev);
 
+    // verifica o CRC do conteúdo contido em "buffer". Os dois últimos
+    // bytes desse buffer contém o valor de CRC
+    bool _check_crc(char * buffer, int len);
+
+    // gera o valor de CRC dos bytes contidos em buffer. O valor de CRC
+    // é escrito em buffer[len] e buffer[len+1]
+    void _gen_crc(char * buffer, int len);
+
+    // calcula o valor de CRC dos bytes contidos em "cp".
+    // "fcs" deve ter o valor PPPINITFCS16
+    // O resultado é o valor de CRC (16 bits)
+    // OBS: adaptado da RFC 1662 (enquadramento no PPP)
+    uint16_t _pppfcs16(uint16_t fcs, char * cp, int len);
+
 };
 
 

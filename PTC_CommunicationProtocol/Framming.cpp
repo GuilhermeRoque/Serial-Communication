@@ -41,7 +41,8 @@ void Framming::send(char *buffer, int bytes) {
 
 void Framming::notify(char * buffer, int len) {
     // for now, just print
-    std::cout << "notify\n";
+    std::cout << "Recebeu " << len << " bytes:\n";
+    std::cout << buffer << std::endl;
 }
 
 void Framming::handle() {
@@ -52,7 +53,7 @@ void Framming::handle() {
     Event ev(b);
     if (_handle_fsm(ev)) {
         // A complete frame was received
-        std::cout << _buffer << std::endl;
+        notify(_buffer, _nbytes);
     }
 }
 

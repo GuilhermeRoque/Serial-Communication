@@ -20,7 +20,7 @@ pld = quadro.encode('ascii')
  
 n = p.write(pld)
 print('Enviou %d bytes: %s' % (n, quadro))
-resp = p.readline()
-print('Recebeu: %s' % str(resp))
+# resp = p.readline()
+# print('Recebeu: %s' % str(resp))
 
 sys.exit(0)
