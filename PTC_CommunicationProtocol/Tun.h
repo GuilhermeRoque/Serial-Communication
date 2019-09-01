@@ -10,6 +10,7 @@
 
 #include <net/if.h>
 #include "Definitions.h"
+#include <stdint.h>
 
 // TunFrame: usado internamente para representar quadros recebidos
 // e enviados para a interface tun. Esses quadros têm um cabeçalho

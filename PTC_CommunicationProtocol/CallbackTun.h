@@ -9,11 +9,21 @@
 #define CALLBACKTUN_H_
 
 #include "Layer.h"
+#include "Tun.h"
 
-class CallbackTun : public Layer{
+class CallbackTun : public Layer {
 public:
-    CallbackTun();
+    CallbackTun(Tun &tun, long tout);
     virtual ~CallbackTun();
+
+    void init();
+    void send(char * buffer, int bytes);
+    void notify(char * buffer, int len);
+
+    void handle();
+    void handle_timeout();
+private:
+    Tun &_tun;
 };
 
 #endif /* CALLBACKTUN_H_ */

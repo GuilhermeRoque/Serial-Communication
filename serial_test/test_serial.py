@@ -2,6 +2,8 @@
  
 from serial import Serial
 import sys
+
+import crc
  
 try:
   porta = sys.argv[1]
@@ -16,11 +18,19 @@ except Exception as e:
   print(e)
   sys.exit(0)
  
-pld = quadro.encode('ascii')
- 
-n = p.write(pld)
-print('Enviou %d bytes: %s' % (n, quadro))
-# resp = p.readline()
-# print('Recebeu: %s' % str(resp))
+# pld = quadro.encode('ascii')
+
+fcs = crc.CRC16(quadro)
+msg = fcs.gen_crc()
+msg_send = bytearray()
+msg_send.append(0x7E)
+msg_send.extend(msg)
+msg_send.append(0x7E)
+# print('Mensagem com FCS:', msg_send)
+
+n = p.write(msg_send)
+print('Enviou %d bytes: %s' % (n, msg_send))
+resp = p.readline()
+print('Recebeu: %s' % str(resp))
 
 sys.exit(0)

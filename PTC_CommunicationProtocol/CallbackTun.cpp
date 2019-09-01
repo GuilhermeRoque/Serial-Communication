@@ -7,7 +7,26 @@
 
 #include "CallbackTun.h"
 
+//CallbackTun::CallbackTun(Tun &tun, long tout) : _tun(tun), Layer(tun.get(), tout) {
+//
+//}
 
-CallbackTun::~CallbackTun() {
-    // TODO Auto-generated destructor stub
+void CallbackTun::init() {
+	_tun.start();
+}
+
+void CallbackTun::send(char * buffer, int bytes) {
+
+}
+
+void CallbackTun::notify(char * buffer, int len) {
+
+}
+
+void CallbackTun::handle() {
+
+}
+
+void CallbackTun::handle_timeout() {
+
 }

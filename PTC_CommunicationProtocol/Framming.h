@@ -14,6 +14,8 @@
 #define FLAG 0x7E
 #define ESCAPE 0x7D
 #define XOR_FLAG 0x20;
+#define PPPINITFCS16 0xffff  /* Initial FCS value */
+#define PPPGOODFCS16 0xf0b8  /* Good final FCS value */
 
 class Framming : public Layer {
 public:
@@ -66,6 +68,9 @@ private:
     // aqui se implementa a máquina de estados de recepção
     // retorna true se reconheceu um quadro completo
     bool _handle_fsm(Event & ev);
+
+    /* Implementacoes CRC */
+    static uint16_t _fcstab[256];
 
     // verifica o CRC do conteúdo contido em "buffer". Os dois últimos
     // bytes desse buffer contém o valor de CRC
