@@ -9,13 +9,13 @@
 
 - Recepção de mensagens livres de erros:
 
-			CRC
+			*CRC
 			Checksum
 
 - Garantia de entrega:
 
 			 ARQ (pedido de retransmissão automática):
-				Pare-espere
+				*Pare-espere
 				Volta-N
 				Retransmissão Seletiva
 
