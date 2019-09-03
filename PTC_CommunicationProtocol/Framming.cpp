@@ -58,12 +58,23 @@ void Framming::send(char *buffer, int bytes) {
 	_gen_crc(buffer, bytes);
 
 	send_buf[0] = FLAG;
-	strcat(send_buf, buffer);
-	send_buf[bytes+3] = FLAG;
-	send_buf[bytes+4] = '\n';
+    int size = 1;
+    for(int i=0;buffer[i]!=0;i++,size++) {
+        if (buffer[i] == FLAG) {
+            send_buf[size] = ESCAPE;
+            send_buf[++size] = FLAG xor XOR_FLAG;
+        } else if (buffer[i] == ESCAPE) {
+            send_buf[size] = ESCAPE;
+            send_buf[++size] = ESCAPE xor XOR_FLAG;
+        } else {
+            send_buf[size] = buffer[i];
+        }
+    }
+	send_buf[size] = FLAG;
+	send_buf[++size] = '\n';
 
 	std::cout << "Enviado: " << send_buf << std::endl;
-    _port.write(send_buf, bytes+5);
+    _port.write(send_buf, size);
 }
 
 //int Framming::receive(char *buffer) {
