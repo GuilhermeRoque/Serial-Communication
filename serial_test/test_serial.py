@@ -28,9 +28,15 @@ msg_send.extend(msg)
 msg_send.append(0x7E)
 # print('Mensagem com FCS:', msg_send)
 
-n = p.write(msg_send)
-print('Enviou %d bytes: %s' % (n, msg_send))
-resp = p.readline()
-print('Recebeu: %s' % str(resp))
+try:
+    n = p.write(msg_send)
+    print('Enviou %d bytes: %s' % (n, msg_send))
+    resp = p.readline()
+    print('Recebido: %s' % str(resp))
+    # while True:
+    #     byte = p.read(1)
+    #     print(byte, end='')
+except:
+    pass
 
 sys.exit(0)

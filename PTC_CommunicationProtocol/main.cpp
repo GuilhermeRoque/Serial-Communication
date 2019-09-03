@@ -7,7 +7,7 @@ using namespace std;
 
 int main() {
     char buf[1024];
-    Serial rf("/dev/pts/3", B9600);
+    Serial rf("/dev/pts/7", B9600);
     Framming framming(rf, 1024, 1000);
 
     Poller sched;

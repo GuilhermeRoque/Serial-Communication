@@ -53,15 +53,16 @@ Framming::~Framming() {
 void Framming::send(char *buffer, int bytes) {
 	char send_buf[1024];
 	memset(send_buf, 0, sizeof(send_buf));
+
+    std::cout << "Enviando: " << buffer << std::endl;
 	_gen_crc(buffer, bytes);
 
 	send_buf[0] = FLAG;
 	strcat(send_buf, buffer);
-	send_buf[bytes+1] = FLAG;
+	send_buf[bytes+3] = FLAG;
 
-	std::cout << buffer << std::endl;
-	std::cout << send_buf << std::endl;
-    _port.write(send_buf, bytes+2);
+	std::cout << "Enviado: " << send_buf << std::endl;
+    _port.write(send_buf, bytes+5);
 }
 
 //int Framming::receive(char *buffer) {
@@ -86,15 +87,11 @@ void Framming::send(char *buffer, int bytes) {
 
 void Framming::notify(char * buffer, int len) {
     // for now, just print
-    std::cout << "Recebeu " << len << " bytes:\n";
-    std::cout << buffer << std::endl;
+    std::cout << "Recebido: " << buffer << std::endl;
 
     // for test, send again without crc
-    char send_buf[1024];
-    memset(send_buf, 0, sizeof(send_buf));
-    memcpy(send_buf, buffer, len-2);
-    strcat(send_buf, "\n");
-    send(send_buf, len-1);
+    buffer[len] = '\n';
+    send(buffer, len+1);
 }
 
 void Framming::handle() {
@@ -105,9 +102,15 @@ void Framming::handle() {
     Event ev(b);
     if (_handle_fsm(ev)) {
         // A complete frame was received
-    	std::cout << "rec: " << _buffer << ":" << _nbytes << std::endl;
-    	if (_check_crc(_buffer, _nbytes-2))
-    		notify(_buffer, _nbytes);
+    	std::cout << "Rec: " << _buffer << " : " << _nbytes << std::endl;
+    	if (_check_crc(_buffer, _nbytes-2)) {
+            int no_crc_size = _nbytes-2;
+            char notify_msg[1024];
+            memset(notify_msg, 0, sizeof(notify_msg));
+            memcpy(notify_msg, _buffer, no_crc_size);
+    		notify(notify_msg, no_crc_size);
+            memset(_buffer, 0, sizeof(_buffer));
+        }
     }
 }
 
