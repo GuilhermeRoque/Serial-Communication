@@ -13,7 +13,7 @@
 
 #define FLAG 0x7E
 #define ESCAPE 0x7D
-#define XOR_FLAG 0x20;
+#define XOR_FLAG 0x20
 #define PPPINITFCS16 0xffff  /* Initial FCS value */
 #define PPPGOODFCS16 0xf0b8  /* Good final FCS value */
 
