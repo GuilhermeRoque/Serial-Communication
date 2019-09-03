@@ -70,8 +70,8 @@ void Framming::send(char *buffer, int bytes) {
             send_buf[size] = buffer[i];
         }
     }
-	send_buf[size] = FLAG;
-	send_buf[++size] = '\n';
+	send_buf[size++] = FLAG;
+	send_buf[size++] = '\n';
 
 	std::cout << "Enviado: " << send_buf << std::endl;
     _port.write(send_buf, size);
