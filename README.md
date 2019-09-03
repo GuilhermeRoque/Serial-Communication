@@ -14,7 +14,10 @@
 
 - Garantia de entrega:
 
-			 ARQ (pedido de retransmissão automática).
+			 ARQ (pedido de retransmissão automática):
+				Pare-espere
+				Volta-N
+				Retransmissão Seletiva
 
 - Controle de acesso ao meio - MAC:
 

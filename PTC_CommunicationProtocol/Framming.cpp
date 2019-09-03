@@ -178,6 +178,7 @@ bool Framming::_check_crc(char * buffer, int len) {
 	return fcs == PPPGOODFCS16;
 }
 
+// gera o valor de CRC dos bytes contidos em buffer
 void Framming::_gen_crc(char * buffer, int len) {
 	uint16_t fcs = _pppfcs16(PPPINITFCS16, buffer, len);
 	fcs ^= 0xffff;
