@@ -60,6 +60,7 @@ void Framming::send(char *buffer, int bytes) {
 	send_buf[0] = FLAG;
 	strcat(send_buf, buffer);
 	send_buf[bytes+3] = FLAG;
+	send_buf[bytes+4] = '\n';
 
 	std::cout << "Enviado: " << send_buf << std::endl;
     _port.write(send_buf, bytes+5);
@@ -90,8 +91,8 @@ void Framming::notify(char * buffer, int len) {
     std::cout << "Recebido: " << buffer << std::endl;
 
     // for test, send again without crc
-    buffer[len] = '\n';
-    send(buffer, len+1);
+    //buffer[len] = '\n';
+    send(buffer, len);
 }
 
 void Framming::handle() {
@@ -170,8 +171,10 @@ bool Framming::_handle_fsm(Event & ev) {
     return complete_frame;
 }
 
+//Verifica se o fcs é igual à PPPGOODFCS16
 bool Framming::_check_crc(char * buffer, int len) {
 	uint16_t fcs = _pppfcs16(PPPINITFCS16, buffer, len + 2);
+	//std::cout << "Verificando CRC... "<< fcs << std::endl;
 	return fcs == PPPGOODFCS16;
 }
 
@@ -180,6 +183,8 @@ void Framming::_gen_crc(char * buffer, int len) {
 	fcs ^= 0xffff;
 	buffer[len] = (fcs & 0x00ff);
 	buffer[len+1] = ((fcs >> 8) & 0x00ff);
+	std::cout << "CRC adicionado: "<< buffer[len] << buffer[len+1]  << std::endl;
+	//std::cout << "buffer[len+1] "<< buffer[len+1]  << std::endl;
 }
 
 uint16_t Framming::_pppfcs16(uint16_t fcs, char * cp, int len) {
