@@ -103,7 +103,11 @@ void Framming::notify(char * buffer, int len) {
 
     // for test, send again without crc
     //buffer[len] = '\n';
-    send(buffer, len);
+
+    //send(buffer, len);
+
+    //Passar pra camada superior (ARQ) em vez de voltar pra serial
+    _upper->notify(buffer,len);
 }
 
 void Framming::handle() {
