@@ -25,6 +25,7 @@ while (True):
     try:
       porta = sys.argv[1]
       ##quadro = sys.argv[2]
+      print('----------------------------------------')
       quadro = input("Insira o quadro a ser enviado: ")
     except:
       print('Uso: %s porta_serial quadro' % sys.argv[0])
