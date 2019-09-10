@@ -36,25 +36,51 @@ void ARQ::handle_fsm(Evento & e) {
 
 	switch (_state) {
     	case Idle:
+    		// app?payload/(!dataN,enable_timeout)
     		if(e.tipo == Payload){
     			char buffer[e.bytes + 2];
-    			buffer[0] = 0; //Quadro de dados e sequência 0
-    			buffer[1] = 0;
-    			memcpy(buffer +2,e.ptr,e.bytes);
-    			_lower->send(buffer,e.bytes +2);
-    			enable_timeout();
+    			buffer[0] = N?0x8:0; //Quadro de dados e sequência N
+    			buffer[1] = 0; //Proto (não utilizado ainda)
+    			memcpy(buffer +2,e.ptr,e.bytes); //copia payload pro buffer com os bytes de ARQ
+    			_lower->send(buffer,e.bytes +2); //passa pro Framming
+    			enable_timeout(); //ativa o timer
+    			_state = WaitAck;
     		}
     		break;
     	case WaitAck:
+    		// ?ackN/(disable_timeout,N:=N/)
     		if(e.tipo == Quadro and ((e.ptr[0]>>7)&1) and !(((e.ptr[0]>>3)&1)^N)){
-    			char buffer[e.bytes - 2];
+    			N = !N;
+    			_state = Idle;
+    		}
+    		// ?dataM/(!ackM,app!payload,M=M/)
+    		else if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and !(((e.ptr[0]>>3)&1)^M)){
+    			char buffer[1024];
     			memcpy(buffer,e.ptr + 2,e.bytes -2);
     			_upper->notify(buffer,e.bytes - 2);
-    			N = !N;
+    			char buffer[2];
+    			buffer[0] = M?0x88:0x80; //Quadro de ACK e sequência M
+    			buffer[1] = 0; //Proto (não utilizado ainda)
+    			_lower->send(buffer,2);
+    			M = !M;
+    			_state = WaitAck;
     		}
-    		if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and !(((e.ptr[0]>>3)&1)^M)){
+    		// ?dataM//(!ackM/)
+    		else if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and (((e.ptr[0]>>3)&1)^M)){
+    			char buffer[2];
+    			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
+    			buffer[1] = 0; //Proto (não utilizado ainda)
+    			_lower->send(buffer,2);
+    			_state = WaitAck;
     		}
-
+    		// ?ackN//(!dataN/)
+    		else if(e.tipo == Quadro and ((e.ptr[0]>>7)&1) and (((e.ptr[0]>>3)&1)^M)){
+    			char buffer[2];
+    			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
+    			buffer[1] = 0; //Proto (não utilizado ainda)
+    			_lower->send(buffer,2);
+    			_state = WaitAck;
+    		}
     		break;
     }
 }
