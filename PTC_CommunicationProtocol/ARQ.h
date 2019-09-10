@@ -9,19 +9,17 @@
 #define ARQ_H_
 #include "Layer.h"
 #include "Framming.h"
+#include <queue>
+using namespace std;
 
 class ARQ : public Layer {
  public:
-    ARQ(Framming & fr,long tout);
+    ARQ(long tout);
     ~ARQ();
     void init() {};
 
-    // envia o quadro apontado por buffer
-    // o tamanho do quadro é dado por bytes
-    // coloca flag no inicio e fim e envia
     void send(char * buffer, int bytes);
 
-    // não recebe notificações, então ...
     void notify(char * buffer, int len);
 
     // métodos de callback ... chamados pelo poller
@@ -32,7 +30,7 @@ class ARQ : public Layer {
   enum TipoEvento {Payload, Quadro, Timeout};
   enum States {Idle, WaitAck};
   States _state;
-  int n_rx,n_tx;
+  bool M,N;
 
   // esta struct descreve um Evento
   struct Evento {
@@ -46,6 +44,8 @@ class ARQ : public Layer {
     // construtor com parâmetros: cria um evento Payload ou Quadro
     Evento(TipoEvento t, char * p, int len) : tipo(t), ptr(p), bytes(len) {}
   };
+
+  queue<Evento> eventos;
 
   // executa a MEF, passando como parâmetro um evento
   void handle_fsm(Evento & e);

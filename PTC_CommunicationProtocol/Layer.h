@@ -27,7 +27,7 @@ public:
     // notificação vinda da camada inferior sobre a chegada de
     virtual void notify(char *ptr, int len) = 0;
 
-private:
+protected:
     Layer *_upper, *_lower;
 
 };

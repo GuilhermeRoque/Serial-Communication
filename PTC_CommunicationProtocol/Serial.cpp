@@ -23,15 +23,18 @@ using std::endl;
 #define MAX_SERIAL_BYTES 64
 
 Serial::Serial() {
-}
-
-Serial::Serial(const Serial& orig) {
-}
-
-Serial::~Serial() {
     char * path = ttyname(0);
     if (not path) throw SerialException("invalid tty");
     init(path, B115200);
+}
+
+Serial::Serial(const Serial& orig) {
+	this->tty_fd = orig.tty_fd;
+	this->timeout = orig.timeout;
+	this->t = orig.t;
+}
+
+Serial::~Serial() {
 }
 
 Serial::Serial(const char* path) {

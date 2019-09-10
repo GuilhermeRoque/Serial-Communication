@@ -104,10 +104,7 @@ void Framming::notify(char * buffer, int len) {
     // for test, send again without crc
     //buffer[len] = '\n';
 
-    //send(buffer, len);
-
-    //Passar pra camada superior (ARQ) em vez de voltar pra serial
-    _upper->notify(buffer,len);
+    send(buffer, len);
 }
 
 void Framming::handle() {
@@ -124,7 +121,8 @@ void Framming::handle() {
             char notify_msg[1024];
             memset(notify_msg, 0, sizeof(notify_msg));
             memcpy(notify_msg, _buffer, no_crc_size);
-    		notify(notify_msg, no_crc_size);
+            //Passar pra camada superior (ARQ) em vez de voltar pra serial
+            _upper->notify(notify_msg, no_crc_size);
             memset(_buffer, 0, sizeof(_buffer));
         }
     }
