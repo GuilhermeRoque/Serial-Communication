@@ -31,6 +31,8 @@ class ARQ : public Layer {
   enum States {Idle, WaitAck};
   States _state;
   bool M,N;
+  char buffer_tx[1026];
+  int bytes_tx;
 
   // esta struct descreve um Evento
   struct Evento {
