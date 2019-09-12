@@ -11,6 +11,7 @@ CPP_SRCS += \
 ../Poller.cpp \
 ../Serial.cpp \
 ../Tun.cpp \
+../ARQ.cpp \
 ../main.cpp 
 
 OBJS += \
@@ -21,6 +22,7 @@ OBJS += \
 ./Poller.o \
 ./Serial.o \
 ./Tun.o \
+./ARQ.o \
 ./main.o 
 
 CPP_DEPS += \
@@ -31,6 +33,7 @@ CPP_DEPS += \
 ./Poller.d \
 ./Serial.d \
 ./Tun.d \
+./ARQ.d \
 ./main.d 
 
 
