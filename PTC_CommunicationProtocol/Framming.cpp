@@ -115,7 +115,11 @@ void Framming::handle() {
     Event ev(b);
     if (_handle_fsm(ev)) {
         // A complete frame was received
-    	std::cout << "Info Recebida: " << _buffer << " ,tamanho: " << _nbytes <<" bytes" << std::endl;
+        std::cout << "Info Recebida: ";
+        // printf("a%x ", _buffer);
+        // std::cout << std::hex << std::cout.write(_buffer, _nbytes);
+        std::cout.write(_buffer, _nbytes);
+    	std::cout << "  " << _nbytes <<" bytes" << std::endl;
     	if (_check_crc(_buffer, _nbytes-2)) {
             int no_crc_size = _nbytes-2;
             char notify_msg[1024];
