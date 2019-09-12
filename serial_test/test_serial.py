@@ -19,8 +19,19 @@ def add_escape(quadro):
 
     return new_quadro
 
-
-
+def get_controle(tipo, sequencia):
+  if tipo == 'data':
+    if sequencia:
+      return 0b00001000
+    else:
+      return 0b00000000
+  else:
+    if sequencia:
+      return 0b01001000
+    else:
+      return 0b01000000
+  
+seq_counter = 0
 while (True):
     try:
       porta = sys.argv[1]
@@ -44,6 +55,7 @@ while (True):
     msg = add_escape(msg)
     msg_send = bytearray()
     msg_send.append(0x7E)
+    msg_send.append(get_controle('data', seq_counter))
     msg_send.extend(msg)
     msg_send.append(0x7E)
     # print('Mensagem com FCS:', msg_send)
@@ -55,9 +67,7 @@ while (True):
         resp = p.readline()
         resp_bytes = ":".join(hex(b)[2:] for b in resp)
         print('Recebido: %s' % str(resp_bytes))
-        # while True:
-        #     byte = p.read(1)
-        #     print(byte, end='')
+        seq_counter = not seq_counter
     except Exception as e:
         print(str(e))
 
