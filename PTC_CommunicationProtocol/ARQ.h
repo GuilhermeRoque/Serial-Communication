@@ -9,8 +9,6 @@
 #define ARQ_H_
 #include "Layer.h"
 #include "Framming.h"
-#include <queue>
-using namespace std;
 
 class ARQ : public Layer {
  public:
@@ -46,8 +44,6 @@ class ARQ : public Layer {
     // construtor com parâmetros: cria um evento Payload ou Quadro
     Evento(TipoEvento t, char * p, int len) : tipo(t), ptr(p), bytes(len) {}
   };
-
-  queue<Evento> eventos;
 
   // executa a MEF, passando como parâmetro um evento
   void handle_fsm(Evento & e);

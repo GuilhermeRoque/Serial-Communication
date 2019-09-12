@@ -19,18 +19,17 @@ ARQ::~ARQ() {
 }
 
 void ARQ::notify(char * buffer, int len) {
-	eventos.push(Evento(Quadro,buffer,len));
-}
-
-void ARQ::handle() {
-	Evento ev = eventos.front();
-	eventos.pop();
+	Evento ev = Evento(Quadro,buffer,len);
 	handle_fsm(ev);
 }
 
-void ARQ::handle_timeout() {
+void ARQ::handle() {}
 
+void ARQ::handle_timeout() {
+	Evento ev = Evento();
+	handle_fsm(ev);
 }
+
 void ARQ::handle_fsm(Evento & e) {
 	//bit 7 -> 0 = DATA e 1 = ACK
 	//bit 3 Sequencia
@@ -51,7 +50,7 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM/(!ackM,app!payload,M=M/)
     		else if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and !(((e.ptr[0]>>3)&1)^M)){
-    			char buffer[1024];
+    			char buffer[e.bytes -2];
     			memcpy(buffer,e.ptr + 2,e.bytes -2);
     			_upper->notify(buffer,e.bytes - 2);
     			char buffer_ACK[2];
@@ -59,6 +58,14 @@ void ARQ::handle_fsm(Evento & e) {
     			buffer_ACK[1] = 0; //Proto (não utilizado ainda)
     			_lower->send(buffer_ACK,2);
     			M = !M;
+    			_state = Idle;
+    		}
+    		// ?dataM//(!ackM/)
+    		else if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and (((e.ptr[0]>>3)&1)^M)){
+    			char buffer[2];
+    			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
+    			buffer[1] = 0; //Proto (não utilizado ainda)
+    			_lower->send(buffer,2);
     			_state = Idle;
     		}
     		break;
@@ -75,6 +82,7 @@ void ARQ::handle_fsm(Evento & e) {
     			char buffer[1024];
     			memcpy(buffer,e.ptr + 2,e.bytes -2);
     			_upper->notify(buffer,e.bytes - 2);
+    			std::cout <<'Recebeu: '<<buffer +2 <<'\n';
     			char buffer_ACK[2];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			buffer_ACK[1] = 0; //Proto (não utilizado ainda)
@@ -90,8 +98,9 @@ void ARQ::handle_fsm(Evento & e) {
     			_lower->send(buffer,2);
     			_state = WaitAck;
     		}
-    		// ?ackN//(!dataN/)
-    		else if(e.tipo == Quadro and ((e.ptr[0]>>7)&1) and (((e.ptr[0]>>3)&1)^N)){
+    		// ?timeout or ?ackN/ / (!dataN/ reload_timeout)
+    		else if((e.tipo == Quadro and ((e.ptr[0]>>7)&1) and (((e.ptr[0]>>3)&1)^N))or e.tipo == Timeout){
+    			reload_timeout();
     			_lower->send(buffer_tx,bytes_tx); //passa pro Framming
     		}
     		break;
@@ -99,5 +108,6 @@ void ARQ::handle_fsm(Evento & e) {
 }
 
 void ARQ::send(char *buffer, int bytes) {
-	eventos.push(Evento(Payload,buffer,bytes));
+	Evento ev = Evento(Payload,buffer,bytes);
+	handle_fsm(ev);
 }
