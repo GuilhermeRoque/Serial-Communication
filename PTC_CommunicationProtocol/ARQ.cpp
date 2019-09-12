@@ -57,7 +57,7 @@ void ARQ::handle_fsm(Evento & e) {
     			char buffer_ACK[2];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			buffer_ACK[1] = 0; //Proto (não utilizado ainda)
-    			_lower->send(buffer,2);
+    			_lower->send(buffer_ACK,2);
     			M = !M;
     			_state = Idle;
     		}
