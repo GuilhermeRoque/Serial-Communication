@@ -115,9 +115,14 @@ void Framming::handle() {
     Event ev(b);
     if (_handle_fsm(ev)) {
         // A complete frame was received
-        std::cout << "Info Recebida: ";
-        // printf("a%x ", _buffer);
-        // std::cout << std::hex << std::cout.write(_buffer, _nbytes);
+    	std::cout << "Info Recebida: ";
+        for(int i = 0 ; i <=_nbytes-1; i++){
+        	if(i == _nbytes-1){
+        		printf("%x\n",_buffer[i]);
+        	}else{
+        	printf("%x:",_buffer[i]);
+        	}
+        }
         std::cout.write(_buffer, _nbytes);
     	std::cout << "  " << _nbytes <<" bytes" << std::endl;
     	if (_check_crc(_buffer, _nbytes-2)) {
