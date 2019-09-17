@@ -7,7 +7,7 @@
 using namespace std;
 
 int main() {
-    Serial rf("/dev/pts/2", B9600);
+    Serial rf("/dev/pts/3", B9600);
     Framming framming(rf, 1026, 1000); //agr tem mais 2 bytes de ctrl então é 1026
     ARQ arq(1000);
     arq.set_lower(&framming);
@@ -16,7 +16,15 @@ int main() {
     sched.adiciona(&framming);
     sched.adiciona(&arq);
 
-    sched.despache();
-
+    string payload;;
+    while(1){
+    	cout <<"Enviar:";
+    	getline(cin,payload);
+    	arq.send((char*)payload.c_str(),payload.length());
+    	while(1){
+    		framming.handle();
+    		if(framming.recebeu_completo == true) break;
+    	}
+    }
     return 0;
 }

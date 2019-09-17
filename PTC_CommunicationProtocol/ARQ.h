@@ -9,6 +9,7 @@
 #define ARQ_H_
 #include "Layer.h"
 #include "Framming.h"
+#include "utils.h"
 
 class ARQ : public Layer {
  public:
@@ -31,6 +32,10 @@ class ARQ : public Layer {
   bool M,N;
   char buffer_tx[1026];
   int bytes_tx;
+
+  bool is_ACK(uint8_t byte);
+  bool is_DATA(uint8_t byte);
+  bool check_SEQ(uint8_t byte,bool bit);
 
   // esta struct descreve um Evento
   struct Evento {

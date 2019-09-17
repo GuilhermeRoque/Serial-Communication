@@ -18,7 +18,23 @@ ARQ::ARQ(long tout):Layer(tout) {
 ARQ::~ARQ() {
 }
 
+bool ARQ::is_ACK(uint8_t byte){
+	return ((byte>>7)&1);
+}
+bool ARQ::is_DATA(uint8_t byte){
+	return (!((byte>>7)&1));
+}
+bool ARQ::check_SEQ(uint8_t byte,bool bit){
+	return (!(((byte>>3)&1)^bit));
+}
+
+
 void ARQ::notify(char * buffer, int len) {
+	//-----------para debug apenas
+		printf("ARQ recebeu do Framming: ");
+	    print_buffer(buffer,len);
+	//----------------------------
+
 	Evento ev = Evento(Quadro,buffer,len);
 	handle_fsm(ev);
 }
@@ -34,6 +50,7 @@ void ARQ::handle_fsm(Evento & e) {
 	//bit 7 -> 0 = DATA e 1 = ACK
 	//bit 3 Sequencia
 
+	uint8_t ctrl_byte = e.ptr[0];
 	switch (_state) {
     	case Idle:
     		// app?payload/(!dataN,enable_timeout)
@@ -49,10 +66,14 @@ void ARQ::handle_fsm(Evento & e) {
     			_state = WaitAck;
     		}
     		// ?dataM/(!ackM,app!payload,M=M/)
-    		else if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and !(((e.ptr[0]>>3)&1)^M)){
+    		else if(e.tipo == Quadro and  is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)){
     			char buffer[e.bytes -2];
     			memcpy(buffer,e.ptr + 2,e.bytes -2);
-    			_upper->notify(buffer,e.bytes - 2);
+    			//-----------para debug apenas
+    				printf("ARQ passou para app: ");
+    			    print_buffer(buffer,e.bytes - 2);
+    			//----------------------------
+    			//_upper->notify(buffer,e.bytes - 2);
     			char buffer_ACK[2];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			buffer_ACK[1] = 0; //Proto (não utilizado ainda)
@@ -61,7 +82,7 @@ void ARQ::handle_fsm(Evento & e) {
     			_state = Idle;
     		}
     		// ?dataM//(!ackM/)
-    		else if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and (((e.ptr[0]>>3)&1)^M)){
+    		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){
     			char buffer[2];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
     			buffer[1] = 0; //Proto (não utilizado ainda)
@@ -72,17 +93,21 @@ void ARQ::handle_fsm(Evento & e) {
 
     	case WaitAck:
     		// ?ackN/(disable_timeout,N:=N/)
-    		if(e.tipo == Quadro and ((e.ptr[0]>>7)&1) and !(((e.ptr[0]>>3)&1)^N)){
+    		if(e.tipo == Quadro and is_ACK(ctrl_byte) and check_SEQ(ctrl_byte,N)){
     			N = !N;
     			_state = Idle;
     			disable_timeout(); //desativa o timer
     		}
     		// ?dataM/(!ackM,app!payload,M=M/)
-    		else if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and !(((e.ptr[0]>>3)&1)^M)){
-    			char buffer[1024];
+    		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)){
+    			char buffer[e.bytes -2];
     			memcpy(buffer,e.ptr + 2,e.bytes -2);
-    			_upper->notify(buffer,e.bytes - 2);
-    			std::cout <<'Recebeu: '<<buffer +2 <<'\n';
+    			//-----------para debug apenas
+    				printf("ARQ passou para app: ");
+    			    print_buffer(buffer,e.bytes - 2);
+    			//----------------------------
+    			//_upper->notify(buffer,e.bytes - 2);
+    			print_buffer(buffer +2,e.bytes - 2); //printa o que recebeu
     			char buffer_ACK[2];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			buffer_ACK[1] = 0; //Proto (não utilizado ainda)
@@ -91,7 +116,7 @@ void ARQ::handle_fsm(Evento & e) {
     			_state = WaitAck;
     		}
     		// ?dataM//(!ackM/)
-    		else if(e.tipo == Quadro and !((e.ptr[0]>>7)&1) and (((e.ptr[0]>>3)&1)^M)){
+    		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){
     			char buffer[2];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
     			buffer[1] = 0; //Proto (não utilizado ainda)
@@ -99,7 +124,7 @@ void ARQ::handle_fsm(Evento & e) {
     			_state = WaitAck;
     		}
     		// ?timeout or ?ackN/ / (!dataN/ reload_timeout)
-    		else if((e.tipo == Quadro and ((e.ptr[0]>>7)&1) and (((e.ptr[0]>>3)&1)^N))or e.tipo == Timeout){
+    		else if((e.tipo == Quadro and is_ACK(ctrl_byte) and not check_SEQ(ctrl_byte,N)) or e.tipo == Timeout){
     			reload_timeout();
     			_lower->send(buffer_tx,bytes_tx); //passa pro Framming
     		}
@@ -108,6 +133,10 @@ void ARQ::handle_fsm(Evento & e) {
 }
 
 void ARQ::send(char *buffer, int bytes) {
+	//-----------para debug apenas
+		printf("ARQ recebeu para enviar: ");
+	    print_buffer(buffer,bytes);
+	//----------------------------
 	Evento ev = Evento(Payload,buffer,bytes);
 	handle_fsm(ev);
 }

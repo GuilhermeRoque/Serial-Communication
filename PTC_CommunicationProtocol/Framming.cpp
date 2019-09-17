@@ -45,21 +45,26 @@ Framming::Framming(Serial &dev, int max_bytes, long tout) : _port(dev), Layer(de
     _nbytes = 0;
     memset(_buffer, 0, sizeof(_buffer));
     _state = Idle;
+	recebeu_completo = false;
+    disable_timeout();
 }
 
 Framming::~Framming() {
 }
 
 void Framming::send(char *buffer, int bytes) {
-	char send_buf[1024];
+	char send_buf[1026];
 	memset(send_buf, 0, sizeof(send_buf));
 
-    std::cout << "Enviando: " << buffer << std::endl;
-	_gen_crc(buffer, bytes);
+//-----------para debug apenas
+	printf("Framming Recebeu para enviar: ");
+    print_buffer(buffer,bytes);
+//----------------------------
 
+    _gen_crc(buffer, bytes);
 	send_buf[0] = FLAG;
     int size = 1;
-    for(int i=0;buffer[i]!=0;i++,size++) {
+    for(int i=0;i<bytes+2;i++,size++) {
         if (buffer[i] == FLAG) {
             send_buf[size] = ESCAPE;
             send_buf[++size] = FLAG xor XOR_FLAG;
@@ -71,41 +76,17 @@ void Framming::send(char *buffer, int bytes) {
         }
     }
 	send_buf[size++] = FLAG;
-	send_buf[size++] = '\n';
+//	send_buf[size++] = '\n';
 
-	std::cout << "Enviado: " << send_buf << std::endl;
-    _port.write(send_buf, size);
+	//-----------para debug apenas
+		printf("Framming Enviando: ");
+	    print_buffer(send_buf,size);
+	//----------------------------
+
+	    _port.write(send_buf, size);
 }
 
-//int Framming::receive(char *buffer) {
-//    if (_state != Idle)
-//        throw -2;
-//
-//    while (true) {
-//        uint8_t a_byte;
-//
-//        if (_port.read((char*) &a_byte, 1, true) != 1 ) {
-//            throw -3;
-//        }
-//
-//        if (_handle(a_byte)) {
-//            memcpy(buffer, _buffer, _nbytes);
-//            return _nbytes;
-//        }
-//
-//    }
-//
-//}
-
-void Framming::notify(char * buffer, int len) {
-    // for now, just print
-    std::cout << "Recebido: " << buffer << std::endl;
-
-    // for test, send again without crc
-    //buffer[len] = '\n';
-
-    send(buffer, len);
-}
+void Framming::notify(char * buffer, int len) {}
 
 void Framming::handle() {
     uint8_t b;
@@ -114,17 +95,10 @@ void Framming::handle() {
 
     Event ev(b);
     if (_handle_fsm(ev)) {
-        // A complete frame was received
-    	std::cout << "Info Recebida: ";
-        for(int i = 0 ; i <=_nbytes-1; i++){
-        	if(i == _nbytes-1){
-        		printf("%x\n",_buffer[i]);
-        	}else{
-        	printf("%x:",_buffer[i]);
-        	}
-        }
-        std::cout.write(_buffer, _nbytes);
-    	std::cout << "  " << _nbytes <<" bytes" << std::endl;
+    	//-----------para debug apenas
+    		printf("Framming recebeu da serial: ");
+    	    print_buffer(_buffer,_nbytes);
+    	//----------------------------
     	if (_check_crc(_buffer, _nbytes-2)) {
             int no_crc_size = _nbytes-2;
             char notify_msg[1024];
@@ -134,11 +108,15 @@ void Framming::handle() {
             _upper->notify(notify_msg, no_crc_size);
             memset(_buffer, 0, sizeof(_buffer));
         }
+    	else{
+    		printf("Framming: ERRO no QUADRO\n");
+    	}
     }
 }
 
 void Framming::handle_timeout() {
-
+    Event ev = Event(); //verificar o pq da necessidade de declarar assim
+    _handle_fsm(ev);
 }
 
 bool Framming::_handle_fsm(Event & ev) {
@@ -147,11 +125,15 @@ bool Framming::_handle_fsm(Event & ev) {
 
     switch (_state) {
         case Idle: // estado Ocioso
-            memset(_buffer, 0, sizeof(_buffer));
-            _nbytes = 0;
+            memset(_buffer, 0, sizeof(_buffer)); //descarta buffer
+            _nbytes = 0; //limpa registro de len de buffer
+            disable_timeout(); //desabilita timer
+        	recebeu_completo = false;
 
-            if (byte == FLAG)
+            if (byte == FLAG){
                 _state = RX;
+                enable_timeout();
+            }
 
             break;
 
@@ -163,12 +145,13 @@ bool Framming::_handle_fsm(Event & ev) {
 
             if ((byte == FLAG) && (_nbytes > 0)) {
                 // End a frame
-                complete_frame = true;
+            	complete_frame = true;
+            	recebeu_completo = true;
                 _state = Idle;
                 break;
             }
 
-            if (_nbytes > _max_bytes) {
+            if (_nbytes > _max_bytes or ev.type == Timeout) {
                 _state = Idle;
                 break;
             }
@@ -178,7 +161,7 @@ bool Framming::_handle_fsm(Event & ev) {
             break;
 
         case ESC: // estado ESC
-            if ((byte == FLAG) || (byte == ESCAPE)) {
+            if ((byte == FLAG) || (byte == ESCAPE) || (ev.type == Timeout)) {
                 _state = Idle;
                 break;
             }
@@ -206,8 +189,6 @@ void Framming::_gen_crc(char * buffer, int len) {
 	fcs ^= 0xffff;
 	buffer[len] = (fcs & 0x00ff);
 	buffer[len+1] = ((fcs >> 8) & 0x00ff);
-	std::cout << "CRC adicionado: "<< buffer[len] << buffer[len+1]  << std::endl;
-	//std::cout << "buffer[len+1] "<< buffer[len+1]  << std::endl;
 }
 
 uint16_t Framming::_pppfcs16(uint16_t fcs, char * cp, int len) {

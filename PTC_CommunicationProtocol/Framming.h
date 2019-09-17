@@ -10,6 +10,7 @@
 #include <iostream>
 #include "Serial.h"
 #include "Layer.h"
+#include "utils.h"
 
 #define FLAG 0x7E
 #define ESCAPE 0x7D
@@ -36,7 +37,7 @@ public:
     // métodos de callback ... chamados pelo poller
     void handle();
     void handle_timeout();
-
+    int recebeu_completo; //apenas para debug
 private:
     int _max_bytes; // tamanhos mínimo e máximo de quadro
     Serial & _port;
