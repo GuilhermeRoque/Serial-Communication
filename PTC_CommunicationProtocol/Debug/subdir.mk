@@ -12,7 +12,8 @@ CPP_SRCS += \
 ../Poller.cpp \
 ../Serial.cpp \
 ../Tun.cpp \
-../main.cpp 
+../main.cpp \
+../utils.cpp 
 
 OBJS += \
 ./ARQ.o \
@@ -23,7 +24,8 @@ OBJS += \
 ./Poller.o \
 ./Serial.o \
 ./Tun.o \
-./main.o 
+./main.o \
+./utils.o 
 
 CPP_DEPS += \
 ./ARQ.d \
@@ -34,7 +36,8 @@ CPP_DEPS += \
 ./Poller.d \
 ./Serial.d \
 ./Tun.d \
-./main.d 
+./main.d \
+./utils.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

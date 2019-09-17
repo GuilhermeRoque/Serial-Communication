@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../ARQ.cpp \
 ../Callback.cpp \
 ../CallbackTun.cpp \
 ../Framming.cpp \
@@ -11,10 +12,11 @@ CPP_SRCS += \
 ../Poller.cpp \
 ../Serial.cpp \
 ../Tun.cpp \
-../ARQ.cpp \
-../main.cpp 
+../teste.cpp \
+../utils.cpp 
 
 OBJS += \
+./ARQ.o \
 ./Callback.o \
 ./CallbackTun.o \
 ./Framming.o \
@@ -22,10 +24,11 @@ OBJS += \
 ./Poller.o \
 ./Serial.o \
 ./Tun.o \
-./ARQ.o \
-./main.o 
+./teste.o \
+./utils.o 
 
 CPP_DEPS += \
+./ARQ.d \
 ./Callback.d \
 ./CallbackTun.d \
 ./Framming.d \
@@ -33,8 +36,8 @@ CPP_DEPS += \
 ./Poller.d \
 ./Serial.d \
 ./Tun.d \
-./ARQ.d \
-./main.d 
+./teste.d \
+./utils.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

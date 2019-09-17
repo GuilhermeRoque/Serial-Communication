@@ -76,7 +76,6 @@ void Framming::send(char *buffer, int bytes) {
         }
     }
 	send_buf[size++] = FLAG;
-//	send_buf[size++] = '\n';
 
 	//-----------para debug apenas
 		printf("Framming Enviando: ");
