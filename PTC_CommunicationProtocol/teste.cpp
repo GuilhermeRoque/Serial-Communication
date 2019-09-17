@@ -6,8 +6,13 @@
 
 using namespace std;
 
-int main() {
-    Serial rf("/dev/pts/3", B9600);
+int main(int argc, char ** argv) {
+	if(argc < 2){
+		cout <<"Especifique FD\n"<<endl;
+		return -1;
+	}
+	char * path = argv[1];
+	Serial rf(path, B9600);
     Framming framming(rf, 1026, 1000); //agr tem mais 2 bytes de ctrl então é 1026
     ARQ arq(1000);
     arq.set_lower(&framming);
