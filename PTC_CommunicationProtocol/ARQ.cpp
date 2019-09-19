@@ -80,6 +80,7 @@ void ARQ::handle_fsm(Evento & e) {
     			_lower->send(buffer_ACK,2);
     			M = !M;
     			_state = Idle;
+
     		}
     		// ?dataM//(!ackM/)
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){

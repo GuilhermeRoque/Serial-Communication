@@ -53,26 +53,29 @@ Framming::~Framming() {
 }
 
 void Framming::send(char *buffer, int bytes) {
-	char send_buf[1026];
+	char send_buf[1026], buf_crc[1026];
 	memset(send_buf, 0, sizeof(send_buf));
+	memset(buf_crc, 0, sizeof(send_buf));
+	memcpy(buf_crc,buffer,bytes);
+
 
 //-----------para debug apenas
 	printf("Framming Recebeu para enviar: ");
     print_buffer(buffer,bytes);
 //----------------------------
 
-    _gen_crc(buffer, bytes);
+    _gen_crc(buf_crc, bytes);
 	send_buf[0] = FLAG;
     int size = 1;
     for(int i=0;i<bytes+2;i++,size++) {
-        if (buffer[i] == FLAG) {
+        if (buf_crc[i] == FLAG) {
             send_buf[size] = ESCAPE;
             send_buf[++size] = FLAG xor XOR_FLAG;
-        } else if (buffer[i] == ESCAPE) {
+        } else if (buf_crc[i] == ESCAPE) {
             send_buf[size] = ESCAPE;
             send_buf[++size] = ESCAPE xor XOR_FLAG;
         } else {
-            send_buf[size] = buffer[i];
+            send_buf[size] = buf_crc[i];
         }
     }
 	send_buf[size++] = FLAG;

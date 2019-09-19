@@ -23,5 +23,17 @@ int main(int argc, char ** argv) {
 
     sched.despache();
 
+    // teste completo
+//    string payload;;
+//    while(1){
+//    	while(1){
+//    		framming.handle();
+//    		if(framming.recebeu_completo == true) break;
+//    	}
+//    	cout <<"Enviar:";
+//    	getline(cin,payload);
+//    	arq.send((char*)payload.c_str(),payload.length());
+//    }
+
     return 0;
 }

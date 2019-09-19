@@ -21,6 +21,8 @@ int main(int argc, char ** argv) {
     sched.adiciona(&framming);
     sched.adiciona(&arq);
 
+//    sched.despache();
+
     string payload;;
     while(1){
     	cout <<"Enviar:";
