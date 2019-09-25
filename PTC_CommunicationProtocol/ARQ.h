@@ -27,7 +27,7 @@ class ARQ : public Layer {
 
  private:
   enum TipoEvento {Payload, Quadro, Timeout};
-  enum States {Idle, WaitAck};
+  enum States {Idle, WaitAck, BackoffAck, BackoffRelay};
   States _state;
   bool M,N;
   char buffer_tx[1026];

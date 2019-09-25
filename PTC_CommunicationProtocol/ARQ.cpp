@@ -130,6 +130,44 @@ void ARQ::handle_fsm(Evento & e) {
     			_lower->send(buffer_tx,bytes_tx); //passa pro Framming
     		}
     		break;
+
+    	case BackoffAck:
+    		// backoff/
+    		if (e.tipo == Timeout) {
+    			_state = Idle;
+    		}
+    		// ?dataM//(!ackM/)
+    		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)) {
+    			char buffer[2];
+    			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
+    			buffer[1] = 0; //Proto (não utilizado ainda)
+    			_lower->send(buffer,2);
+    			_state = BackoffAck;
+    		}
+
+
+    		break;
+
+    	case BackoffRelay:
+    		// backoff/!dataN
+    		if (e.tipo == Timeout) {
+    			int buf_size = strlen(buffer_tx);
+    			char buffer[buf_size];
+    			strcpy(buffer, buffer_tx);
+    			_lower->send(buffer, buf_size); // reenvia quadro
+    			enable_timeout();
+    			_state = WaitAck;
+    		}
+    		// ?dataM//(!ackM/)
+    		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)) {
+    			char buffer[2];
+    			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
+    			buffer[1] = 0; //Proto (não utilizado ainda)
+    			_lower->send(buffer,2);
+    			_state = WaitAck;
+    		}
+
+    		break;
     }
 }
 
