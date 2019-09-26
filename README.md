@@ -32,7 +32,7 @@
 			3 vias
 
 - Máquina Estado Sessão:
-![](https://drive.google.com/open?id=1aet1FHGPMj1doSzD30aYzNGclvL-GR1N)
+https://drive.google.com/open?id=1aet1FHGPMj1doSzD30aYzNGclvL-GR1N
 
 >Esquemático do protocolo .
 >
