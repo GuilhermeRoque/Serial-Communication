@@ -22,7 +22,7 @@
 - Controle de acesso ao meio - MAC:
 
 			 CSMA/CA
-			 Aloha
+			 *Aloha
 			 Mestre/escravo
 			 TDMA
 
