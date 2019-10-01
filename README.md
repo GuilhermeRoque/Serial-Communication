@@ -28,7 +28,7 @@
 
 - Conectado (estabelecimento de sessão):
 
-			2 vias
+			*2 vias
 			3 vias
 
 - Máquina Estado Sessão:
