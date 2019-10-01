@@ -11,6 +11,8 @@
 #include "Framming.h"
 #include "utils.h"
 
+#define TIMEOUT_BACKOFF 1 // millisegundos
+
 class ARQ : public Layer {
  public:
     ARQ(long tout);
@@ -36,6 +38,7 @@ class ARQ : public Layer {
   bool is_ACK(uint8_t byte);
   bool is_DATA(uint8_t byte);
   bool check_SEQ(uint8_t byte,bool bit);
+  void set_backoff();
 
   // esta struct descreve um Evento
   struct Evento {
