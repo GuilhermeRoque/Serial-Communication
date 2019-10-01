@@ -13,25 +13,34 @@
 
 #include "Callback.h"
 
-Callback::Callback(int fd, long tout): fd(fd), base_tout(tout),tout(tout), enabled_to(true) {
+Callback::Callback(int fd, long tout): fd(fd), base_tout(tout),tout(tout), enabled_to(true), enabled(true), reloaded(false) {
     if (tout < 0) throw -1;
 }
 
-Callback::Callback(long tout) : fd(-1), base_tout(tout),tout(tout), enabled_to(true) {
+Callback::Callback(long tout) : fd(-1), base_tout(tout),tout(tout), enabled_to(true), reloaded(false) {
     if (tout < 0) throw -1;
 }
 
 int Callback::filedesc() const { return fd;}
 
+void Callback::set_timeout(long t_out) {
+    if (t_out < 0) throw -1;
+    reloaded = true;
+    tout = t_out;
+}
+
 int Callback::timeout() const { return tout;}
 
 void Callback::reload_timeout() {
     tout = base_tout;
+    reloaded = true;
 }
 
 void Callback::update(long dt) {
-    tout -= dt;
-    if (tout < 0) tout = 0;
+    if (! reloaded) {
+        tout -= dt;
+        if (tout < 0) tout = 0;
+    } else reloaded = false;
 }
 
 bool Callback::operator==(const Callback & o) const {
@@ -44,4 +53,12 @@ void Callback::disable_timeout() {
 
 void Callback::enable_timeout() {
     enabled_to = true;
+}
+
+void Callback::enable() {
+    enabled = true;
+}
+
+void Callback::disable() {
+    enabled = false;
 }

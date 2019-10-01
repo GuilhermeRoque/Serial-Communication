@@ -37,15 +37,29 @@ public:
 
     int filedesc() const;
     int timeout() const;
+    void set_timeout(long t_out);
     void update(long dt); // ajusta timeout restante
     void reload_timeout();
     void disable_timeout();
     void enable_timeout();
+
+    // desativa ou ativa o monitoramento de dados no descritor de arquivos deste callback
+    // o timeout não é afetado
+    virtual void disable();
+    virtual void enable();
+
+    // informa se o monitoramento de dados no descritor de arquivos deste callback está ativado
+    bool is_enabled() const { return enabled;}
+
+    // informa se o timeout deste callback está ativado
     bool timeout_enabled() const { return enabled_to;}
 protected:
     int fd; // se < 0, este callback se torna um simples timer
     long tout;
     long base_tout;// milissegundos. Se <= 0, este callback não tem timeout
     bool enabled_to;
+    bool enabled;
+    bool reloaded;
 };
 #endif /* CALLBACK_H */
+

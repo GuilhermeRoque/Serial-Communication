@@ -26,6 +26,7 @@ public:
 
     // notificação vinda da camada inferior sobre a chegada de
     virtual void notify(char *ptr, int len) = 0;
+    //virtual void notifyERR() = 0;
 
 protected:
     Layer *_upper, *_lower;

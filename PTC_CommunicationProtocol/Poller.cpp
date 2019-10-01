@@ -1,8 +1,11 @@
 #include <sys/time.h>
 #include <set>
+#include <iostream>
 #include "Poller.h"
 
 using std::set;
+using std::cout;
+using std::endl;
 
 // valor mto grande ...
 const long MaxTimeout = 1000000000;
@@ -71,12 +74,13 @@ void Poller::despache_simples() {
     bool has_tout = false;
 
     for (auto cb : cbs_to) {
+        //cout << "poller: " << cb->filedesc() << "," << cb->timeout_enabled() << endl;
         if (! cb->timeout_enabled()) continue;
 
         has_tout = true;
         int fd = cb->filedesc();
         int timeout = cb->timeout();
-
+        //cout << "poller:" << timeout << " < " << min_timeout << " ?" << endl;
         if (timeout < min_timeout) {
             min_timeout = timeout;
             cb_tout = cb;
@@ -98,13 +102,15 @@ void Poller::despache_simples() {
             }
         }
 
-        if (fd >= 0) {
+        if (fd >= 0 and par.second->is_enabled()) {
             if (nfds == MAX_FDS) throw -1; // erro: excedeu qtde de descritores vigiados
             fds[nfds].fd = fd;
             fds[nfds].events = POLLIN;
             nfds++;
         }
     }
+
+    //cout << "poller: timeout=" << min_timeout << endl;
 
     // lê o relógio, para saber o instante em que o poll iniciou
     timeval t1, t2;
@@ -136,8 +142,8 @@ void Poller::despache_simples() {
                 cb->reload_timeout();
                 n--;
             }/* else {
-        cb->update(dt);
-        }*/
+		cb->update(dt);
+	    }*/
         }
     }
 
