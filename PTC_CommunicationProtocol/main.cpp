@@ -3,6 +3,7 @@
 #include "Framming.h"
 #include "Poller.h"
 #include "ARQ.h"
+#include "App.h"
 
 using namespace std;
 
@@ -18,22 +19,15 @@ int main(int argc, char ** argv) {
     arq.set_lower(&framming);
     framming.set_upper(&arq);
     Poller sched;
+    App app(0,2000);
+    app.set_lower(&arq);
+    arq.set_upper(&app);
+
     sched.adiciona(&framming);
     sched.adiciona(&arq);
+    sched.adiciona(&app);
 
     sched.despache();
-
-    // teste completo
-//    string payload;;
-//    while(1){
-//    	while(1){
-//    		framming.handle();
-//    		if(framming.recebeu_completo == true) break;
-//    	}
-//    	cout <<"Enviar:";
-//    	getline(cin,payload);
-//    	arq.send((char*)payload.c_str(),payload.length());
-//    }
 
     return 0;
 }

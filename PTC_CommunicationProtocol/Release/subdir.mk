@@ -5,6 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../ARQ.cpp \
+../App.cpp \
 ../Callback.cpp \
 ../CallbackTun.cpp \
 ../Framming.cpp \
@@ -17,6 +18,7 @@ CPP_SRCS += \
 
 OBJS += \
 ./ARQ.o \
+./App.o \
 ./Callback.o \
 ./CallbackTun.o \
 ./Framming.o \
@@ -29,6 +31,7 @@ OBJS += \
 
 CPP_DEPS += \
 ./ARQ.d \
+./App.d \
 ./Callback.d \
 ./CallbackTun.d \
 ./Framming.d \

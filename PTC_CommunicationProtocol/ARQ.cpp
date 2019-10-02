@@ -72,11 +72,7 @@ void ARQ::handle_fsm(Evento & e) {
     		else if(e.tipo == Quadro and  is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)){
     			char buffer[e.bytes -2];
     			memcpy(buffer,e.ptr + 2,e.bytes -2);
-    			//-----------para debug apenas
-    				printf("ARQ passou para app: ");
-    			    print_buffer(buffer,e.bytes - 2);
-    			//----------------------------
-    			//_upper->notify(buffer,e.bytes - 2);
+    			_upper->notify(buffer,e.bytes - 2);
     			char buffer_ACK[2];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			buffer_ACK[1] = 0; //Proto (não utilizado ainda)
@@ -110,12 +106,7 @@ void ARQ::handle_fsm(Evento & e) {
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)){
     			char buffer[e.bytes -2];
     			memcpy(buffer,e.ptr + 2,e.bytes -2);
-    			//-----------para debug apenas
-    				printf("ARQ passou para app: ");
-    			    print_buffer(buffer,e.bytes - 2);
-    			//----------------------------
-    			//_upper->notify(buffer,e.bytes - 2);
-    			print_buffer(buffer +2,e.bytes - 2); //printa o que recebeu
+    			_upper->notify(buffer,e.bytes - 2);
     			char buffer_ACK[2];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			buffer_ACK[1] = 0; //Proto (não utilizado ainda)
@@ -155,12 +146,7 @@ void ARQ::handle_fsm(Evento & e) {
     		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)) {
 				char buffer[e.bytes -2];
 				memcpy(buffer,e.ptr + 2,e.bytes -2);
-				//-----------para debug apenas
-					printf("ARQ passou para app: ");
-					print_buffer(buffer,e.bytes - 2);
-				//----------------------------
-				//_upper->notify(buffer,e.bytes - 2);
-				print_buffer(buffer +2,e.bytes - 2); //printa o que recebeu
+				_upper->notify(buffer,e.bytes - 2);
 				char buffer_ACK[2];
 				buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
 				buffer_ACK[1] = 0; //Proto (não utilizado ainda)
@@ -188,12 +174,7 @@ void ARQ::handle_fsm(Evento & e) {
     		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)) {
 				char buffer[e.bytes -2];
 				memcpy(buffer,e.ptr + 2,e.bytes -2);
-				//-----------para debug apenas
-					printf("ARQ passou para app: ");
-					print_buffer(buffer,e.bytes - 2);
-				//----------------------------
-				//_upper->notify(buffer,e.bytes - 2);
-				print_buffer(buffer +2,e.bytes - 2); //printa o que recebeu
+				_upper->notify(buffer,e.bytes - 2);
 				char buffer_ACK[2];
 				buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
 				buffer_ACK[1] = 0; //Proto (não utilizado ainda)
