@@ -22,6 +22,7 @@ class ARQ : public Layer {
     void send(char * buffer, int bytes);
 
     void notify(char * buffer, int len);
+    void notifyERR();
 
     // métodos de callback ... chamados pelo poller
     void handle();
@@ -34,6 +35,7 @@ class ARQ : public Layer {
   bool M,N;
   char buffer_tx[1026];
   int bytes_tx;
+  int retry_counter;
 
   bool is_ACK(uint8_t byte);
   bool is_DATA(uint8_t byte);

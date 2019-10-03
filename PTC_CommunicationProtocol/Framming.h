@@ -33,6 +33,7 @@ public:
 
     // não recebe notificações, então ...
     void notify(char * buffer, int len);
+    void notifyERR() {};
 
     // métodos de callback ... chamados pelo poller
     void handle();

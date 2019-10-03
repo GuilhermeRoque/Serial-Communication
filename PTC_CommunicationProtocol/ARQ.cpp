@@ -13,6 +13,7 @@ ARQ::ARQ(long tout):Layer(tout) {
 	N = 0;
 	_state = Idle;
 	bytes_tx = 0;
+	retry_counter = 0;
 }
 
 ARQ::~ARQ() {
@@ -129,9 +130,19 @@ void ARQ::handle_fsm(Evento & e) {
     		else if((e.tipo == Quadro and is_ACK(ctrl_byte) and not check_SEQ(ctrl_byte,N)) or e.tipo == Timeout){
 //    			reload_timeout();
 //    			_lower->send(buffer_tx,bytes_tx); //passa pro Framming
-    			set_backoff();
-    			_state = BackoffRelay;
-    			std::cout << "indo para BackoffRelay\n";
+
+    			if (retry_counter == 3) {
+    				retry_counter = 0;
+    				_upper->notifyERR();
+    				_state = Idle;
+					std::cout << "indo para Idle (retry_counter)\n";
+    			} else {
+					set_backoff();
+					retry_counter++;
+					_state = BackoffRelay;
+					std::cout << "indo para BackoffRelay\n";
+    			}
+
     		}
     		break;
 
@@ -199,3 +210,8 @@ void ARQ::send(char *buffer, int bytes) {
 void ARQ::set_backoff() {
 	tout = TIMEOUT_BACKOFF;
 }
+
+void ARQ::notifyERR() {
+
+}
+
