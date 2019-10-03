@@ -9,7 +9,7 @@
 
 - Recepção de mensagens livres de erros:
 
-			*CRC
+			*CRC-16
 			Checksum
 
 - Garantia de entrega:
