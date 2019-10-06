@@ -12,6 +12,7 @@ CPP_SRCS += \
 ../Layer.cpp \
 ../Poller.cpp \
 ../Serial.cpp \
+../Session.cpp \
 ../Tun.cpp \
 ../main.cpp \
 ../utils.cpp 
@@ -25,6 +26,7 @@ OBJS += \
 ./Layer.o \
 ./Poller.o \
 ./Serial.o \
+./Session.o \
 ./Tun.o \
 ./main.o \
 ./utils.o 
@@ -38,6 +40,7 @@ CPP_DEPS += \
 ./Layer.d \
 ./Poller.d \
 ./Serial.d \
+./Session.d \
 ./Tun.d \
 ./main.d \
 ./utils.d 

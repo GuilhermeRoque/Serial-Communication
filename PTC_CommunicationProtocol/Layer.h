@@ -28,6 +28,7 @@ public:
     virtual void notify(char *ptr, int len) = 0;
     virtual void notifyERR() = 0;
 
+
 protected:
     Layer *_upper, *_lower;
 
