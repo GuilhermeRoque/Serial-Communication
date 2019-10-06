@@ -11,12 +11,15 @@ Session::Session(int fd, long tout) : Layer(fd, tout) {
 	bytes_tx = 0;
 	_state = DISC;
 	disable();
+	disable_timeout();
 }
 
 Session::Session(long tout) : Layer(tout) {
 	bytes_tx = 0;
 	_state = DISC;
 	disable();
+	disable_timeout();
+
 }
 
 Session::~Session() {
@@ -49,6 +52,13 @@ void Session::handle_timeout() {
 
 void Session::handle_fsm(Evento & e) {
 
+	//HELP VARIABLES
+	uint8_t id_Proto;
+	uint8_t session_act;
+	bool is_session;
+	bool session_frame;
+	bool data_frame;
+
 	//?Erro --Comportamento padrão para todos os estados
 	if(e.tipo == Erro){
 		_state = DISC;
@@ -56,13 +66,15 @@ void Session::handle_fsm(Evento & e) {
 		std::cout <<"Erro no controle de sessão, desconectando...\n";
 		return;
 	}
+	else if(e.tipo != Timeout){
+		//HELP VARIABLES
+		id_Proto = e.ptr[2];
+		session_act = e.ptr[4];
+		is_session = id_Proto == 255;
+		session_frame = e.tipo == Quadro and is_session;
+		data_frame = e.tipo == Quadro and not is_session;
+	}
 
-	//HELP VARIABLES
-	uint8_t id_Proto = e.ptr[2];
-	uint8_t session_act = e.ptr[4];
-	bool is_session = id_Proto == 255;
-	bool session_frame = e.tipo == Quadro and is_session;
-	bool data_frame = e.tipo == Quadro and not is_session;
 
 
 	switch (_state) {

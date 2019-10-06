@@ -9,7 +9,6 @@
 
 App::App(int tty_fd,long tout): tty_fd(tty_fd),Layer(tty_fd, tout){
 	disable_timeout();
-	_lower->enable_timeout();
 
 }
 
@@ -27,12 +26,13 @@ void App::notify(char * buffer, int len){
 }
 
 void App::handle(){
+	int n = read(tty_fd, buffer, 1024);
 	if(_lower->is_enabled()){
-		int n = read(tty_fd, buffer, 1024);
 		this->_lower->send(buffer,n-1);
 	}
 	else{
-		printf("Erro: Não há conexão");
+		printf("Erro: Não há conexão\n");
+		_lower->enable_timeout();
 	}
 }
 
