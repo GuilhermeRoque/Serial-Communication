@@ -76,7 +76,12 @@ void Session::handle_fsm(Evento & e) {
 	}
 
 
-
+	/*Fora do estado CON o timer deste callbeck serve para tentar conexão
+	 *No estado CON o timer deste callbeck serve para o keep alive
+	 *Start e close são definidos pelo enable/disable timeout
+	 *enable e disable do descritor de arquivo(não existente neste callbeck) são utilizados para
+	 *monitorar o estado de conexão
+	 */
 	switch (_state) {
 	case DISC:
 		//start
