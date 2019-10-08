@@ -31,7 +31,7 @@ public:
     void handle();
     void handle_timeout();
     void init() {};
-
+    void close(){}
 private:
     int tty_fd;
     char buffer[1024];

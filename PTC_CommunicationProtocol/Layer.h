@@ -20,6 +20,7 @@ public:
     void set_lower(Layer *lower) { _lower = lower; }
 
     virtual void init() = 0;
+    virtual void close() = 0;
 
     // envia dados vindos da camada superior
     virtual void send(char *ptr, int len) = 0;

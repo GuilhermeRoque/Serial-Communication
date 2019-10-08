@@ -26,7 +26,15 @@ Session::~Session() {
 	// TODO Auto-generated destructor stub
 }
 
+void Session::init() {
+	Evento ev = Evento(Start, nullptr, 0);
+	handle_fsm(ev);
+}
 
+void Session::close() {
+	Evento ev = Evento(Stop, nullptr, 0);
+	handle_fsm(ev);
+}
 
 void Session::send(char *buffer, int bytes) {
 	Evento ev = Evento(Payload, buffer, bytes);
@@ -34,7 +42,13 @@ void Session::send(char *buffer, int bytes) {
 }
 
 void Session::notify(char * buffer, int len) {
-	Evento ev = Evento(Quadro, buffer, len);
+	Evento ev;
+	//buffer[2] = id_proto
+	if(buffer[2] == 255){
+		ev = Evento(Controle, buffer, len);
+	}else{
+		ev = Evento(Quadro, buffer, len);
+	}
 	handle_fsm(ev);
 }
 
@@ -52,13 +66,6 @@ void Session::handle_timeout() {
 
 void Session::handle_fsm(Evento & e) {
 
-	//HELP VARIABLES
-	uint8_t id_Proto;
-	uint8_t session_act;
-	bool is_session;
-	bool session_frame;
-	bool data_frame;
-
 	//?Erro --Comportamento padrão para todos os estados
 	if(e.tipo == Erro){
 		_state = DISC;
@@ -66,26 +73,17 @@ void Session::handle_fsm(Evento & e) {
 		std::cout <<"Erro no controle de sessão, desconectando...\n";
 		return;
 	}
-	else if(e.tipo != Timeout){
-		//HELP VARIABLES
-		id_Proto = e.ptr[2];
-		session_act = e.ptr[4];
-		is_session = id_Proto == 255;
-		session_frame = e.tipo == Quadro and is_session;
-		data_frame = e.tipo == Quadro and not is_session;
-	}
 
-
-	/*Fora do estado CON o timer deste callbeck serve para tentar conexão
-	 *No estado CON o timer deste callbeck serve para o keep alive
+	/*
+	 *O timer deste callbeck serve para o keep alive
 	 *Start e close são definidos pelo enable/disable timeout
-	 *enable e disable do descritor de arquivo(não existente neste callbeck) são utilizados para
-	 *monitorar o estado de conexão
+	 *enable e disable do descritor de arquivo(não existente neste callbeck) são utilizados para monitorar o estado de conexão
 	 */
+
 	switch (_state) {
 	case DISC:
-		//start
-		if(e.tipo == Timeout){
+		//?start !CR ->HAND1
+		if(e.tipo == Start){
 			std::cout<<"Tentando conectar...\n";
 			_state = HAND1;
 			char buffer[1] = {CR};
@@ -93,136 +91,148 @@ void Session::handle_fsm(Evento & e) {
 		}
 		break;
 	case HAND1:
-		//?CR !CC
-		if(session_frame and session_act == CR){
+		//?CR !CC ->HAND2
+		if(e.tipo==Controle and e.ptr[3] == CR){
 			_state = HAND2;
 			char buffer[1] = {CC};
 			_lower->send(buffer,1);
 		}
-		//?CC
-		else if(session_frame and session_act == CC){
+		//?CC ->HAND3
+		else if(e.tipo==Controle and e.ptr[3] == CC){
 			_state = HAND3;
 		}
 		break;
 	case HAND2:
-		//?DR !DR
-		if(session_frame and session_act == DR){
+		//?DR !DR ->HALF2
+		if(e.tipo==Controle and e.ptr[3] == DR){
 			_state = HALF2;
 			char buffer[1] = {DR};
 			_lower->send(buffer,1);
 		}
 
-		//?DATA ?CC
-		else if(data_frame or (session_frame and session_act == CC)){
+		//?DATA ?CC ->CON
+		else if(e.tipo==Quadro or (e.tipo==Controle and e.ptr[3] == CC)){
 			_state = CON;
-			reload_timeout();
+			enable_timeout();
 			enable();
 		}
 
 		break;
 	case HAND3:
-		//?CR !CC
-		if(session_frame and session_act == CR){
+		//?CR !CC ->CON
+		if(e.tipo==Controle and e.ptr[3] == CR){
 			_state = CON;
 			enable();
-			reload_timeout();
+			enable_timeout();
 			char buffer[1] = {CC};
 			_lower->send(buffer,1);
 		}
 		break;
 	case CON:
-		//?close !DR
-		if(not timeout_enabled()){
+		//?close !DR ->HALF1
+		if(e.tipo == Stop){
 			char buffer[1] = {DR};
 			_lower->send(buffer,1);
 			_state = HALF1;
+			disable_timeout();
 		}
-		// app?payload !DATA
+		// app?payload !DATA ->CON
 		else if(e.tipo == Payload){
 			_state = CON;
 			reload_timeout();
 			_lower->send(e.ptr,e.bytes);
 		}
-		// ?DATA app!payload
-		else if(data_frame){
+		// ?DATA app!payload -> CON
+		else if(e.tipo==Quadro){
 			_state = CON;
 			reload_timeout();
 			_upper->notify(e.ptr,e.bytes);
 		}
-		// ?KR !KC
-		else if(data_frame and session_act == KR){
+		// ?KR !KC ->CON
+		else if(e.tipo==Controle and e.ptr[3] == KR){
 			_state = CON;
 			reload_timeout();
 			char buffer[1] = {KC};
 			_lower->send(buffer,1);
 		}
-		// ?DR !DR
-		else if(data_frame and session_act == DR){
+		// ?DR !DR -> HALF2
+		else if(e.tipo==Quadro and e.ptr[3] == DR){
 			_state = HALF2;
 			char buffer[1] = {DR};
 			_lower->send(buffer,1);
+			disable_timeout();
+
 		}
 		// ?checkInterval !KR
 		if(e.tipo == Timeout){
 			_state = CHECK;
 			char buffer[1] = {KR};
 			_lower->send(buffer,1);
+			disable_timeout();
 		}
 		break;
 	case CHECK:
-		// app?payload !DATA
+		// app?payload !DATA ->CHECK
 		if(e.tipo == Payload){
 			_state = CHECK;
 			_lower->send(e.ptr,e.bytes);
 		}
-		// ?KR !KC
-		else if(session_frame and session_act == KR){
-			_state = CON;
-			reload_timeout();
+		// ?KR !KC ->CHECK
+		else if(e.tipo==Controle and e.ptr[3] == KR){
+			_state = CHECK;
 			char buffer[1] = {KC};
 			_lower->send(buffer,1);
 		}
-		// ?DATA app!payload
-		else if(data_frame){
+		// ?DATA app!payload ->CON
+		else if(e.tipo==Quadro){
 			_state = CON;
-			reload_timeout();
+			enable_timeout();
 			_upper->notify(e.ptr,e.bytes);
 		}
-		//?KC
-		else if(session_frame and session_act == KC){
-			enable();
-			reload_timeout();
+		//?KC ->CON
+		else if(e.tipo==Controle and e.ptr[3] == KC){
+			enable_timeout();
+			_state = CON;
 		}
-		// ?DR !DR
-		else if(data_frame and session_act == DR){
+		// ?DR !DR->HALF2
+		else if(e.tipo==Controle and e.ptr[3] == DR){
 			_state = HALF2;
 			char buffer[1] = {DR};
 			_lower->send(buffer,1);
 		}
 		break;
 	case HALF1:
-		if(data_frame){
+		//?data app!payload ->HALF1
+		if(e.tipo==Quadro){
 			_state = HALF1;
 			_upper->notify(e.ptr,e.bytes);
 		}
-		if(session_frame and session_act == KR){
+		//?KR !DR ->HALF1
+		else if(e.tipo==Controle and e.ptr[3] == KR){
 			char buffer[1] = {DR};
 			_lower->send(buffer,1);
 			_state = HALF1;
 		}
+		//?DR !DC ->DISC
+		else if(e.tipo==Controle and e.ptr[3] == DR){
+			char buffer[1] = {DC};
+			_lower->send(buffer,1);
+			disable();
+			_state = DISC;
+		}
 
 		break;
 	case HALF2:
-		// ?DR !DR
-		if(data_frame and session_act == DR){
+		// ?DR !DR ->HALF2
+		if(e.tipo==Quadro and e.ptr[3] == DR){
 			_state = HALF2;
 			char buffer[1] = {DR};
 			_lower->send(buffer,1);
 		}
 		//?DC
-		if(data_frame and session_act == DC){
-			_state = DISC;
+		else if(e.tipo==Quadro and e.ptr[3] == DC){
 			disable();
+			_state = DISC;
 		}
 		break;
 	}

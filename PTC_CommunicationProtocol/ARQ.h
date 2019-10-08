@@ -18,6 +18,7 @@ class ARQ : public Layer {
     ARQ(long tout);
     ~ARQ();
     void init() {};
+    void close() {};
 
     void send(char * buffer, int bytes);
 

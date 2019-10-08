@@ -26,10 +26,11 @@ public:
 
     void handle();
     void handle_timeout();
-    void init(){};
+    void init();
+    void close();
 
 private:
-	enum TipoEvento {Payload, Quadro, Timeout, Controle,Erro};
+	enum TipoEvento {Payload, Quadro, Timeout, Controle,Erro,Start,Stop};
 	enum States {DISC, HAND1, HAND2, HAND3, CON, CHECK, HALF1, HALF2};
 	enum SessionAct {CR,CC,KR,KC,DR,DC};
 	States _state;

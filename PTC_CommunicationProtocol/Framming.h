@@ -25,6 +25,7 @@ public:
 
 
     void init() {};
+    void close() {};
 
     // envia o quadro apontado por buffer
     // o tamanho do quadro é dado por bytes
