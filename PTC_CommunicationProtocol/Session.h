@@ -10,6 +10,7 @@
 
 #include "Layer.h"
 #include <iostream>
+#include "utils.h"
 #define Session_Proto 0xFF
 
 class Session: public Layer {

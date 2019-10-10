@@ -44,16 +44,23 @@ void Session::send(char *buffer, int bytes) {
 
 void Session::notify(char * buffer, int len) {
 	Evento ev;
+	std::cout<<"Sessao recebeu ";
 	//buffer[2] = id_proto
-	if(buffer[2] == (char)Session_Proto){
+	if(buffer[1] == (char)Session_Proto){
 		ev = Evento(Controle, buffer, len);
+		std::cout<<"Controle: ";
+		print_buffer(buffer,len);
+
 	}else{
+		std::cout<<"Quadro: ";
+		print_buffer(buffer,len);
 		ev = Evento(Quadro, buffer, len);
 	}
 	handle_fsm(ev);
 }
 
 void Session::notifyERR() {
+	std::cout<<"Sessao recebeu erro\n";
 	Evento ev = Evento(Erro, nullptr, 1);
 	handle_fsm(ev);
 }
@@ -111,8 +118,8 @@ void Session::handle_fsm(Evento & e) {
 			_lower->send(buffer,3);
 		}
 
-		//?DATA ?CC ->CON
-		else if(e.tipo==Quadro or (e.tipo==Controle and e.ptr[3] == CC)){
+		//?CC ->CON
+		else if(e.tipo==Controle and e.ptr[3] == CC){
 			_state = CON;
 			enable_timeout();
 			enable();
@@ -230,7 +237,7 @@ void Session::handle_fsm(Evento & e) {
 			char buffer[3] = {id,(char)Session_Proto,DR};
 			_lower->send(buffer,3);
 		}
-		//?DC
+		//?DC -> DISC
 		else if(e.tipo==Quadro and e.ptr[3] == DC){
 			disable();
 			_state = DISC;
