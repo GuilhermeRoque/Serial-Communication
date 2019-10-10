@@ -21,26 +21,27 @@ int main(int argc, char ** argv) {
     Framming framming(rf, 1026, 1000); //agr tem mais 2 bytes de ctrl então é 1026
     ARQ arq(1000);
     Session sessao(1000);
-    // App app(0,2000);
-    Tun tun("ptc_iface", "10.10.10.1", "10.10.10.2");
-    tun.start();
-    CallbackTun ctun(tun, 1000);
+    App app(0,2000);
+//    Tun tun("ptc_iface", "10.10.10.2", "10.10.10.1");
+//    tun.start();
+//    CallbackTun ctun(tun, 1000);
 
     framming.set_upper(&arq);
     arq.set_lower(&framming);
     arq.set_upper(&sessao);
     sessao.set_lower(&arq);
-    // sessao.set_upper(&app);
-    // app.set_lower(&sessao);
-    sessao.set_upper(&ctun);
-    ctun.set_lower(&sessao);
-    ctun.init();
+    sessao.set_upper(&app);
+    app.set_lower(&sessao);
+//    sessao.set_upper(&ctun);
+//    ctun.set_lower(&sessao);
+//    ctun.init();
+
     Poller sched;
     sched.adiciona(&framming);
     sched.adiciona(&arq);
-    // sched.adiciona(&app);
-    sched.adiciona(&ctun);
+    sched.adiciona(&app);
     sched.adiciona(&sessao);
+//    sched.adiciona(&ctun);
     sched.despache();
     return 0;
 }

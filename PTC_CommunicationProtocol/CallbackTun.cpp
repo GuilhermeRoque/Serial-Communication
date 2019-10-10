@@ -41,5 +41,9 @@ void CallbackTun::handle() {
 }
 
 void CallbackTun::handle_timeout() {
-
+	if(not _lower->is_enabled()){
+		_lower->init();
+	}else{
+		disable_timeout();
+	}
 }
