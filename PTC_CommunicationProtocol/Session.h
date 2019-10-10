@@ -10,6 +10,7 @@
 
 #include "Layer.h"
 #include <iostream>
+#define Session_Proto 0xFF
 
 class Session: public Layer {
 public:
@@ -36,6 +37,7 @@ private:
 	States _state;
 	char buffer_tx[1026];
 	int bytes_tx;
+	char id;
 
  // esta struct descreve um Evento
  struct Evento {

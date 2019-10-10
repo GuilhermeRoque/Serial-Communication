@@ -12,6 +12,8 @@ Session::Session(int fd, long tout) : Layer(fd, tout) {
 	_state = DISC;
 	disable();
 	disable_timeout();
+	srand (time(NULL));
+	id = rand()%0xFF;
 }
 
 Session::Session(long tout) : Layer(tout) {
@@ -19,12 +21,11 @@ Session::Session(long tout) : Layer(tout) {
 	_state = DISC;
 	disable();
 	disable_timeout();
-
+	srand (time(NULL));
+	id = rand();
 }
 
-Session::~Session() {
-	// TODO Auto-generated destructor stub
-}
+Session::~Session() {}
 
 void Session::init() {
 	Evento ev = Evento(Start, nullptr, 0);
@@ -44,7 +45,7 @@ void Session::send(char *buffer, int bytes) {
 void Session::notify(char * buffer, int len) {
 	Evento ev;
 	//buffer[2] = id_proto
-	if(buffer[2] == 255){
+	if(buffer[2] == (char)Session_Proto){
 		ev = Evento(Controle, buffer, len);
 	}else{
 		ev = Evento(Quadro, buffer, len);
@@ -76,7 +77,7 @@ void Session::handle_fsm(Evento & e) {
 
 	/*
 	 *O timer deste callbeck serve para o keep alive
-	 *Start e close são definidos pelo enable/disable timeout
+	 *Start e close são definidos pelo enable/disable
 	 *enable e disable do descritor de arquivo(não existente neste callbeck) são utilizados para monitorar o estado de conexão
 	 */
 
@@ -86,16 +87,16 @@ void Session::handle_fsm(Evento & e) {
 		if(e.tipo == Start){
 			std::cout<<"Tentando conectar...\n";
 			_state = HAND1;
-			char buffer[1] = {CR};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,CR};
+			_lower->send(buffer,3);
 		}
 		break;
 	case HAND1:
 		//?CR !CC ->HAND2
 		if(e.tipo==Controle and e.ptr[3] == CR){
 			_state = HAND2;
-			char buffer[1] = {CC};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,CC};
+			_lower->send(buffer,3);
 		}
 		//?CC ->HAND3
 		else if(e.tipo==Controle and e.ptr[3] == CC){
@@ -106,8 +107,8 @@ void Session::handle_fsm(Evento & e) {
 		//?DR !DR ->HALF2
 		if(e.tipo==Controle and e.ptr[3] == DR){
 			_state = HALF2;
-			char buffer[1] = {DR};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,DR};
+			_lower->send(buffer,3);
 		}
 
 		//?DATA ?CC ->CON
@@ -124,15 +125,15 @@ void Session::handle_fsm(Evento & e) {
 			_state = CON;
 			enable();
 			enable_timeout();
-			char buffer[1] = {CC};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,CC};
+			_lower->send(buffer,3);
 		}
 		break;
 	case CON:
 		//?close !DR ->HALF1
 		if(e.tipo == Stop){
-			char buffer[1] = {DR};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,DR};
+			_lower->send(buffer,3);
 			_state = HALF1;
 			disable_timeout();
 		}
@@ -146,28 +147,28 @@ void Session::handle_fsm(Evento & e) {
 		else if(e.tipo==Quadro){
 			_state = CON;
 			reload_timeout();
-			_upper->notify(e.ptr,e.bytes);
+			_upper->notify(e.ptr+1,e.bytes-1);
 		}
 		// ?KR !KC ->CON
 		else if(e.tipo==Controle and e.ptr[3] == KR){
 			_state = CON;
 			reload_timeout();
-			char buffer[1] = {KC};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,KC};
+			_lower->send(buffer,3);
 		}
 		// ?DR !DR -> HALF2
 		else if(e.tipo==Quadro and e.ptr[3] == DR){
 			_state = HALF2;
-			char buffer[1] = {DR};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,DR};
+			_lower->send(buffer,3);
 			disable_timeout();
 
 		}
 		// ?checkInterval !KR
 		if(e.tipo == Timeout){
 			_state = CHECK;
-			char buffer[1] = {KR};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,KR};
+			_lower->send(buffer,3);
 			disable_timeout();
 		}
 		break;
@@ -180,14 +181,14 @@ void Session::handle_fsm(Evento & e) {
 		// ?KR !KC ->CHECK
 		else if(e.tipo==Controle and e.ptr[3] == KR){
 			_state = CHECK;
-			char buffer[1] = {KC};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,KC};
+			_lower->send(buffer,3);
 		}
 		// ?DATA app!payload ->CON
 		else if(e.tipo==Quadro){
 			_state = CON;
 			enable_timeout();
-			_upper->notify(e.ptr,e.bytes);
+			_upper->notify(e.ptr+1,e.bytes-1);
 		}
 		//?KC ->CON
 		else if(e.tipo==Controle and e.ptr[3] == KC){
@@ -197,26 +198,26 @@ void Session::handle_fsm(Evento & e) {
 		// ?DR !DR->HALF2
 		else if(e.tipo==Controle and e.ptr[3] == DR){
 			_state = HALF2;
-			char buffer[1] = {DR};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,DR};
+			_lower->send(buffer,3);
 		}
 		break;
 	case HALF1:
 		//?data app!payload ->HALF1
 		if(e.tipo==Quadro){
 			_state = HALF1;
-			_upper->notify(e.ptr,e.bytes);
+			_upper->notify(e.ptr+1,e.bytes-1);
 		}
 		//?KR !DR ->HALF1
 		else if(e.tipo==Controle and e.ptr[3] == KR){
-			char buffer[1] = {DR};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,DR};
+			_lower->send(buffer,3);
 			_state = HALF1;
 		}
 		//?DR !DC ->DISC
 		else if(e.tipo==Controle and e.ptr[3] == DR){
-			char buffer[1] = {DC};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,DC};
+			_lower->send(buffer,3);
 			disable();
 			_state = DISC;
 		}
@@ -226,8 +227,8 @@ void Session::handle_fsm(Evento & e) {
 		// ?DR !DR ->HALF2
 		if(e.tipo==Quadro and e.ptr[3] == DR){
 			_state = HALF2;
-			char buffer[1] = {DR};
-			_lower->send(buffer,1);
+			char buffer[3] = {id,(char)Session_Proto,DR};
+			_lower->send(buffer,3);
 		}
 		//?DC
 		else if(e.tipo==Quadro and e.ptr[3] == DC){
