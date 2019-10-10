@@ -34,10 +34,12 @@
 - Máquina Estado Sessão:
 https://drive.google.com/open?id=1aet1FHGPMj1doSzD30aYzNGclvL-GR1N
 
->Modelo Camadas.
->
-![](https://github.com/viniciusluzsouza/ptc/blob/master/Modelo%20Camadas.png)
+
 
 >Esquemático do protocolo .
 >
 ![](https://github.com/viniciusluzsouza/ptc/blob/master/Protocol.png)
+
+>Diagrama de Funcionamento.
+>
+![](https://github.com/viniciusluzsouza/ptc/blob/master/Funcionamento_Protocolo.png)
