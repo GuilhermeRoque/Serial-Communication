@@ -17,8 +17,10 @@ public:
     virtual ~CallbackTun();
 
     void init();
+    void close();
     void send(char * buffer, int bytes);
     void notify(char * buffer, int len);
+    void notifyERR();
 
     void handle();
     void handle_timeout();
