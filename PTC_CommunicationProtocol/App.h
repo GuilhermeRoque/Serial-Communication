@@ -25,12 +25,12 @@ public:
 
     // não recebe notificações, então ...
     void notify(char * buffer, int len);
-    void notifyERR() {};
+    void notifyERR();
 
     // métodos de callback ... chamados pelo poller
     void handle();
     void handle_timeout();
-    void init() {};
+    void init() {}
     void close(){}
 private:
     int tty_fd;

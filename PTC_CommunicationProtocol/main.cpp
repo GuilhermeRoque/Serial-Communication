@@ -43,5 +43,6 @@ int main(int argc, char ** argv) {
     sched.adiciona(&sessao);
 //    sched.adiciona(&ctun);
     sched.despache();
+    
     return 0;
 }

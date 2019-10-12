@@ -43,3 +43,7 @@ void App::handle_timeout(){
 		disable_timeout();
 	}
 }
+
+void App::notifyERR() {
+	printf("APP ERROR!\n");
+}

@@ -7,7 +7,7 @@
 
 #include "ARQ.h"
 
-ARQ::ARQ(long tout):Layer(tout) {
+ARQ::ARQ(long tout):Layer(40, tout) {
 	disable_timeout();
 	M = 0;
 	N = 0;
@@ -55,6 +55,7 @@ void ARQ::handle_fsm(Evento & e) {
 	uint8_t ctrl_byte = e.ptr[0];
 	switch (_state) {
     	case Idle:
+			std::cout << "IN IDLE\n";
     		// app?payload/(!dataN,enable_timeout)
     		if(e.tipo == Payload){
     			char buffer[e.bytes + 1];
@@ -77,6 +78,7 @@ void ARQ::handle_fsm(Evento & e) {
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			_lower->send(buffer_ACK,1);
     			M = !M;
+				disable_timeout();
     			_state = Idle;
     			std::cout << "indo para idle 1\n";
 
@@ -86,12 +88,14 @@ void ARQ::handle_fsm(Evento & e) {
     			char buffer[1];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
     			_lower->send(buffer,1);
+				disable_timeout();
     			_state = Idle;
     			std::cout << "indo para idle 2\n";
     		}
     		break;
 
     	case WaitAck:
+			std::cout << "IN WAITACK\n";
     		// ?ackN/(disable_timeout,N:=N/)
     		// ?ackN/set_backoff
     		if(e.tipo == Quadro and is_ACK(ctrl_byte) and check_SEQ(ctrl_byte,N)){
@@ -129,6 +133,7 @@ void ARQ::handle_fsm(Evento & e) {
     			if (retry_counter == 3) {
     				retry_counter = 0;
     				_upper->notifyERR();
+					disable_timeout();
     				_state = Idle;
 					std::cout << "indo para Idle (retry_counter)\n";
     			} else {
@@ -142,6 +147,7 @@ void ARQ::handle_fsm(Evento & e) {
     		break;
 
     	case BackoffAck:
+			std::cout << "IN BackoffAck\n";
     		// backoff/
     		if (e.tipo == Timeout) {
     			_state = Idle;
@@ -158,6 +164,7 @@ void ARQ::handle_fsm(Evento & e) {
 				_lower->send(buffer_ACK,1);
 				M = !M;
 				_state = BackoffAck;
+				set_backoff();
 				std::cout << "indo para BackoffAck from backoffack\n";
     		}
 
@@ -165,6 +172,7 @@ void ARQ::handle_fsm(Evento & e) {
     		break;
 
     	case BackoffRelay:
+			std::cout << "IN BackoffRelay\n";
     		// backoff/!dataN
     		if (e.tipo == Timeout) {
     			int buf_size = strlen(buffer_tx);
@@ -185,6 +193,7 @@ void ARQ::handle_fsm(Evento & e) {
 				_lower->send(buffer_ACK,1);
 				M = !M;
 				_state = BackoffRelay;
+				set_backoff();
 				std::cout << "indo para BackoffRelay from BackoffRelay\n";
     		}
     		break;
@@ -201,7 +210,8 @@ void ARQ::send(char *buffer, int bytes) {
 }
 
 void ARQ::set_backoff() {
-	set_timeout(TIMEOUT_BACKOFF);
+	// set_timeout(TIMEOUT_BACKOFF);
+	tout = TIMEOUT_BACKOFF;
 }
 
 void ARQ::notifyERR() {

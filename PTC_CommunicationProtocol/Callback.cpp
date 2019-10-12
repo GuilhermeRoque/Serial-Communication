@@ -12,6 +12,7 @@
  */
 
 #include "Callback.h"
+#include <iostream>
 
 Callback::Callback(int fd, long tout): fd(fd), base_tout(tout),tout(tout), enabled_to(true), enabled(true), reloaded(false) {
     if (tout < 0) throw -1;
