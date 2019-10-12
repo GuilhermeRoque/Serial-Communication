@@ -7,7 +7,7 @@
 
 #include "ARQ.h"
 
-ARQ::ARQ(long tout):Layer(40, tout) {
+ARQ::ARQ(long tout):Layer(tout) {
 	disable_timeout();
 	M = 0;
 	N = 0;
@@ -206,11 +206,12 @@ void ARQ::send(char *buffer, int bytes) {
 	    print_buffer(buffer,bytes);
 	//----------------------------
 	Evento ev = Evento(Payload,buffer,bytes);
+	enable_timeout();
 	handle_fsm(ev);
 }
 
 void ARQ::set_backoff() {
-	// set_timeout(TIMEOUT_BACKOFF);
+//	 set_timeout(TIMEOUT_BACKOFF);
 	tout = TIMEOUT_BACKOFF;
 }
 

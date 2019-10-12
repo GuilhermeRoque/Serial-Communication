@@ -45,7 +45,7 @@ void Callback::update(long dt) {
 }
 
 bool Callback::operator==(const Callback & o) const {
-  return fd == o.fd;
+  return (fd == o.fd) && (base_tout == o.base_tout);
 }
 
 void Callback::disable_timeout() {

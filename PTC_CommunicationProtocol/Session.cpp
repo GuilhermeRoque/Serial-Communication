@@ -96,6 +96,7 @@ void Session::handle_fsm(Evento & e) {
 			std::cout<<"Tentando conectar...\n";
 			_state = HAND1;
 			char buffer[3] = {id,(char)Session_Proto,CR};
+			enable_timeout();
 			_lower->send(buffer,3);
 		}
 		break;

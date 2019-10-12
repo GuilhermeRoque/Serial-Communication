@@ -8,6 +8,7 @@
 #include "App.h"
 
 App::App(int tty_fd,long tout): tty_fd(tty_fd),Layer(tty_fd, tout){
+	enable_timeout();
 }
 
 App::~App() {}

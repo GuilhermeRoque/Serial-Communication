@@ -74,7 +74,7 @@ void Poller::despache_simples() {
     bool has_tout = false;
 
     for (auto cb : cbs_to) {
-        //cout << "poller: " << cb->filedesc() << "," << cb->timeout_enabled() << endl;
+//        cout << "poller: " << cb->filedesc() << "," << cb->timeout_enabled() << endl;
         if (! cb->timeout_enabled()) continue;
 
         has_tout = true;
