@@ -20,7 +20,7 @@ int main(int argc, char ** argv) {
 	Serial rf(path, B9600);
     Framming framming(rf, 1026, 1000); //agr tem mais 2 bytes de ctrl então é 1026
     ARQ arq(1000);
-    Session sessao(3000);
+    Session sessao(6000);
     App app(0,2000);
 //    Tun tun("ptc_iface", "10.10.10.2", "10.10.10.1");
 //    tun.start();
@@ -42,6 +42,8 @@ int main(int argc, char ** argv) {
     sched.adiciona(&sessao);
     sched.adiciona(&app);
 //    sched.adiciona(&ctun);
+
+    framming.init();
     sched.despache();
     
     return 0;

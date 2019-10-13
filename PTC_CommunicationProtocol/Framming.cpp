@@ -200,4 +200,8 @@ uint16_t Framming::_pppfcs16(uint16_t fcs, char * cp, int len) {
 	return fcs;
 }
 
+void Framming::init() {
+	char by;
+	while(_port.read((char*) &by, 1, false) != 0);
+}
 
