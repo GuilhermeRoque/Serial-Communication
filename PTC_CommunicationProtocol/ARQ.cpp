@@ -108,6 +108,9 @@ void ARQ::handle_fsm(Evento & e) {
     		// ?ackN/(disable_timeout,N:=N/)
     		// ?ackN/set_backoff
     		if(e.tipo == Quadro and is_ACK(ctrl_byte) and check_SEQ(ctrl_byte,N)){
+    			char buffer[e.bytes -1];
+    			memcpy(buffer,e.ptr + 1,e.bytes -1);
+    			_upper->notify(buffer,e.bytes - 1);
     			N = !N;
     			set_backoff();
     			_state = BackoffAck;

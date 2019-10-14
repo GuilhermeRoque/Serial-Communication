@@ -78,8 +78,10 @@ void Session::handle_fsm(Evento & e) {
 
 	//?Erro --Comportamento padrão para todos os estados
 	if(e.tipo == Erro){
-		_state = DISC;
-		disable();
+		_state = HAND1;
+		enable();
+		reload_timeout();
+		enable_timeout();
 		std::cout <<"Erro no controle de sessão, desconectando...\n";
 		return;
 	}
@@ -197,21 +199,27 @@ void Session::handle_fsm(Evento & e) {
 		// app?payload !DATA ->CON
 		else if(e.tipo == Payload){
 			_state = CON;
+			enable();
 			reload_timeout();
+			enable_timeout();
 			_lower->send(e.ptr,e.bytes);
 			std::cout<<"[SESSAO] "<<"GOTO CON 1\n";
 		}
 		// ?DATA app!payload -> CON
 		else if(e.tipo==Quadro){
 			_state = CON;
+			enable();
 			reload_timeout();
+			enable_timeout();
 			_upper->notify(e.ptr+1,e.bytes-1);
 			std::cout<<"[SESSAO] "<<"GOTO CON 2\n";
 		}
 		// ?KR !KC ->CON
 		else if(e.tipo==Controle and e.ptr[2] == KR){
 			_state = CON;
+			enable();
 			reload_timeout();
+			enable_timeout();
 			char buffer[3] = {id,(char)Session_Proto,KC};
 			_lower->send(buffer,3);
 			std::cout<<"[SESSAO] "<<"GOTO CON 3\n";
@@ -230,7 +238,9 @@ void Session::handle_fsm(Evento & e) {
 			_state = CHECK;
 			char buffer[3] = {id,(char)Session_Proto,KR};
 			_lower->send(buffer,3);
-			disable_timeout();
+			enable();
+			reload_timeout();
+			enable_timeout();
 			std::cout<<"[SESSAO] "<<"GOTO CHECK\n";
 		}
 		break;
@@ -252,12 +262,16 @@ void Session::handle_fsm(Evento & e) {
 		// ?DATA app!payload ->CON
 		else if(e.tipo==Quadro){
 			_state = CON;
+			enable();
+			reload_timeout();
 			enable_timeout();
 			_upper->notify(e.ptr+1,e.bytes-1);
 			std::cout<<"[SESSAO] "<<"GOTO CON\n";
 		}
 		//?KC ->CON
 		else if(e.tipo==Controle and e.ptr[2] == KC){
+			enable();
+			reload_timeout();
 			enable_timeout();
 			_state = CON;
 			std::cout<<"[SESSAO] "<<"GOTO CON 2\n";
