@@ -34,6 +34,7 @@ void App::handle(){
 	}
 	else{
 		printf("Erro: Não há conexão\n");
+		this->enable_timeout();
 	}
 }
 
@@ -41,6 +42,7 @@ void App::handle_timeout(){
 	if(not _lower->is_enabled()){
 		_lower->init();
 	}else{
+		printf("Conectado!!\n");
 		disable_timeout();
 	}
 }
