@@ -11,6 +11,7 @@
 #include "Layer.h"
 #include <iostream>
 #include "utils.h"
+#include <string.h>
 #define Session_Proto 0xFF
 #define TIMEOUT_SESSION 10000 // millisegundos
 

@@ -165,7 +165,10 @@ void Session::handle_fsm(Evento & e) {
 		else if(e.tipo == Payload){
 			_state = CON;
 			reload_timeout();
-			_lower->send(e.ptr,e.bytes);
+			char buffer[e.bytes+1];
+			buffer[0]=id;
+			memcpy(buffer+1,e.ptr,e.bytes);
+			_lower->send(buffer,e.bytes+1);
 			////std::cout<<"[SESSION]GOTO CON 1\n";
 		}
 		// ?DATA app!payload -> CON
