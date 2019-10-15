@@ -24,7 +24,7 @@ public:
     ~Framming();
 
 
-    void init() {};
+    void init();
     void close() {};
 
     // envia o quadro apontado por buffer

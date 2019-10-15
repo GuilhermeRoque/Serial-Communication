@@ -10,14 +10,16 @@
 #include "Layer.h"
 #include "Framming.h"
 #include "utils.h"
+#include <queue>
 
 #define TIMEOUT_BACKOFF 1 // millisegundos
+#define TIMEOUT_ACK 3000 // millisegundos
 
 class ARQ : public Layer {
  public:
     ARQ(long tout);
     ~ARQ();
-    void init() {};
+    void init();
     void close() {};
 
     void send(char * buffer, int bytes);
@@ -34,8 +36,6 @@ class ARQ : public Layer {
   enum States {Idle, WaitAck, BackoffAck, BackoffRelay};
   States _state;
   bool M,N;
-  char buffer_tx[1026];
-  int bytes_tx;
   int retry_counter;
 
   bool is_ACK(uint8_t byte);
@@ -46,18 +46,27 @@ class ARQ : public Layer {
   // esta struct descreve um Evento
   struct Evento {
     TipoEvento tipo;
-    char * ptr;
+    char ptr[1026];
     int bytes;
 
     // construtor sem parâmetros: cria um Evento Timeout
     Evento() { tipo = Timeout;}
 
     // construtor com parâmetros: cria um evento Payload ou Quadro
-    Evento(TipoEvento t, char * p, int len) : tipo(t), ptr(p), bytes(len) {}
+    Evento(TipoEvento t, char * p, int len) : tipo(t), bytes(len) {
+    	memcpy(ptr,p,bytes);
+    }
   };
 
   // executa a MEF, passando como parâmetro um evento
   void handle_fsm(Evento & e);
+
+  std::queue<Evento> buffer_ev;
+  void send_payload(Evento ev);
+
+  char buffer_tx[1026];
+  int bytes_tx;
+
 };
 
 #endif /* ARQ_H_ */

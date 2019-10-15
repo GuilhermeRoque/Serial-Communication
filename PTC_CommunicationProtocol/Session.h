@@ -12,6 +12,7 @@
 #include <iostream>
 #include "utils.h"
 #define Session_Proto 0xFF
+#define TIMEOUT_SESSION 10000 // millisegundos
 
 class Session: public Layer {
 public:

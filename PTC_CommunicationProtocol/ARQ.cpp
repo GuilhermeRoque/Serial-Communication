@@ -13,7 +13,12 @@ ARQ::ARQ(long tout):Layer(tout) {
 	N = 0;
 	_state = Idle;
 	bytes_tx = 0;
+	memset(buffer_tx,0,1026);
 	retry_counter = 0;
+	disable();
+	while(not buffer_ev.empty()){
+		buffer_ev.pop();
+	}
 }
 
 ARQ::~ARQ() {
@@ -43,9 +48,31 @@ void ARQ::notify(char * buffer, int len) {
 void ARQ::handle() {}
 
 void ARQ::handle_timeout() {
-	std::cout << "timeout\n";
 	Evento ev = Evento();
 	handle_fsm(ev);
+}
+void ARQ::send(char *buffer, int bytes) {
+	//-----------para debug apenas
+		printf("ARQ recebeu para enviar: ");
+	    print_buffer(buffer,bytes);
+	//----------------------------
+	Evento ev = Evento(Payload,buffer,bytes);
+	if(_state == Idle){
+    	handle_fsm(ev);
+    }else{
+    	buffer_ev.push(ev);
+    }
+}
+void ARQ::send_payload(Evento e){
+	_state = WaitAck;
+	char buffer[e.bytes + 1];
+	buffer[0] = N?0x8:0; //Quadro de dados e sequência N
+	memcpy(buffer +1,e.ptr,e.bytes); //copia payload pro buffer com os bytes de ARQ para enviar
+	memcpy(buffer_tx,buffer,e.bytes+1); //copia quadro a ser enviado para se necessário reenviar
+	bytes_tx = e.bytes+1;
+	_lower->send(buffer,e.bytes +1); //passa pro Framming
+	reload_timeout();
+	enable_timeout(); //ativa o timer
 }
 
 void ARQ::handle_fsm(Evento & e) {
@@ -55,167 +82,138 @@ void ARQ::handle_fsm(Evento & e) {
 	uint8_t ctrl_byte = e.ptr[0];
 	switch (_state) {
     	case Idle:
-			std::cout << "IN IDLE\n";
-    		// app?payload/(!dataN,enable_timeout)
+    		std::cout <<"[ARQ]IN IDLE "<<e.tipo<<"\n";
+    		// app?payload !dataN !enable_timeout
     		if(e.tipo == Payload){
-    			char buffer[e.bytes + 1];
-    			buffer[0] = N?0x8:0; //Quadro de dados e sequência N
-    			memcpy(buffer +1,e.ptr,e.bytes); //copia payload pro buffer com os bytes de ARQ para enviar
-    			memcpy(buffer_tx,buffer,e.bytes+1); //copia quadro a ser enviado para se necessário reenviar
-    			bytes_tx = e.bytes+1;
-    			_lower->send(buffer,e.bytes +1); //passa pro Framming
-    			reload_timeout();
-    			enable_timeout(); //ativa o timer
-    			_state = WaitAck;
-    			std::cout << "indo para waitack\n";
+    			send_payload(e);
     		}
-    		// ?dataM/(!ackM,app!payload,M=M/)
+    		// ?dataM !ackM app!payload M=M/)
     		else if(e.tipo == Quadro and  is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)){
-    			char buffer[e.bytes -1];
-    			memcpy(buffer,e.ptr + 1,e.bytes -1);
-    			_upper->notify(buffer,e.bytes - 1);
     			char buffer_ACK[1];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			_lower->send(buffer_ACK,1);
-    			M = !M;
-				disable_timeout();
-    			_state = Idle;
-    			std::cout << "indo para idle 1\n";
 
+    			char buffer[e.bytes -1];
+    			memcpy(buffer,e.ptr + 1,e.bytes -1);
+    			_upper->notify(buffer,e.bytes - 1);
+
+    			M = !M;
+    			_state = Idle;
     		}
-    		// ?dataM//(!ackM/)
+    		// ?dataM/ !ackM/
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){
     			char buffer[1];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
     			_lower->send(buffer,1);
-				disable_timeout();
     			_state = Idle;
-    			std::cout << "indo para idle 2\n";
     		}
     		break;
 
     	case WaitAck:
-			std::cout << "IN WAITACK\n";
-    		// ?ackN/(disable_timeout,N:=N/)
-    		// ?ackN/set_backoff
+    		// ?ackN !set_backoff N:=N/
+       		std::cout <<"[ARQ] IN WAITACK "<<e.tipo<<"\n";
     		if(e.tipo == Quadro and is_ACK(ctrl_byte) and check_SEQ(ctrl_byte,N)){
     			N = !N;
-    			set_backoff();
+    			set_timeout(TIMEOUT_BACKOFF);
     			_state = BackoffAck;
-    			std::cout << "indo para BackoffAck\n";
     		}
-    		// ?dataM/(!ackM,app!payload,M=M/)
+    		// ?dataM !ackM app!payload M=M/
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)){
-    			char buffer[e.bytes -1];
-    			memcpy(buffer,e.ptr + 1,e.bytes -1);
-    			_upper->notify(buffer,e.bytes - 1);
     			char buffer_ACK[1];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
     			_lower->send(buffer_ACK,1);
+
+
+    			char buffer[e.bytes -1];
+    			memcpy(buffer,e.ptr + 1,e.bytes -1);
+    			_upper->notify(buffer,e.bytes - 1);
+
     			M = !M;
     			_state = WaitAck;
-    			std::cout << "indo para WaitAck 2\n";
     		}
-    		// ?dataM//(!ackM/)
+    		// ?dataM/ !ackM/
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){
     			char buffer[1];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
     			_lower->send(buffer,1);
     			_state = WaitAck;
-    			std::cout << "indo para WaitAck 3\n";
     		}
-    		// ?timeout or ?ackN/ / (!dataN/ reload_timeout)
-    		// ?timeout or ?ackN/ / set_backoff
+    		// ?timeout or ?ackN/ !dataN/ set_backoff
     		else if((e.tipo == Quadro and is_ACK(ctrl_byte) and not check_SEQ(ctrl_byte,N)) or e.tipo == Timeout){
-//    			reload_timeout();
-//    			_lower->send(buffer_tx,bytes_tx); //passa pro Framming
-
     			if (retry_counter == 3) {
     				retry_counter = 0;
     				_upper->notifyERR();
 					disable_timeout();
-    				_state = Idle;
-					std::cout << "indo para Idle (retry_counter)\n";
+					_state = Idle;
     			} else {
-					set_backoff();
+    				set_timeout(TIMEOUT_BACKOFF);
 					retry_counter++;
 					_state = BackoffRelay;
-					std::cout << "indo para BackoffRelay\n";
     			}
-
     		}
     		break;
 
     	case BackoffAck:
-			std::cout << "IN BackoffAck\n";
+       		std::cout <<"[ARQ] IN BackoffAck "<<e.tipo<<"\n";
     		// backoff/
     		if (e.tipo == Timeout) {
-    			_state = Idle;
-    			disable_timeout();
-    			std::cout << "indo para idle from backoffack\n";
+				if(not buffer_ev.empty()){
+					Evento a = buffer_ev.front();
+					buffer_ev.pop();
+					std::cout<<"[ARQ] Enviando oq faltou\n";
+					send_payload(a);
+				}else{
+					_state = Idle;
+					disable_timeout();
+				}
     		}
-    		// ?dataM !ackM
+    		// ?dataM !ackM !M=M/
     		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)) {
-				char buffer[e.bytes -1];
-				memcpy(buffer,e.ptr + 2,e.bytes -1);
-				_upper->notify(buffer,e.bytes - 1);
 				char buffer_ACK[1];
 				buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
 				_lower->send(buffer_ACK,1);
+
+    			char buffer[e.bytes -1];
+				memcpy(buffer,e.ptr + 1,e.bytes -1);
+				_upper->notify(buffer,e.bytes - 1);
 				M = !M;
 				_state = BackoffAck;
-				set_backoff();
-				std::cout << "indo para BackoffAck from backoffack\n";
     		}
-
-
     		break;
 
     	case BackoffRelay:
-			std::cout << "IN BackoffRelay\n";
-    		// backoff/!dataN
+       		std::cout <<"[ARQ] IN BackoffRelay "<<e.tipo<<"\n";
+    		// ?backoff !dataN !reload_timeout()
     		if (e.tipo == Timeout) {
-    			int buf_size = strlen(buffer_tx);
-    			char buffer[buf_size];
-    			strcpy(buffer, buffer_tx);
-    			_lower->send(buffer, buf_size); // reenvia quadro
-    			reload_timeout();
+				_lower->send(buffer_tx,bytes_tx); //passa pro Framming
+				reload_timeout();
     			_state = WaitAck;
-    			std::cout << "indo para WaitAck from BackoffRelay\n";
     		}
-    		// ?dataM/(!ackM,app!payload,M=M/)
-    		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)) {
-				char buffer[e.bytes -1];
-				memcpy(buffer,e.ptr + 1,e.bytes -1);
-				_upper->notify(buffer,e.bytes - 1);
+    		// ?dataM !ackM app!payload M=M/
+    		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)) {
 				char buffer_ACK[1];
 				buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
 				_lower->send(buffer_ACK,1);
+
+    			char buffer[e.bytes -1];
+				memcpy(buffer,e.ptr + 1,e.bytes -1);
+				_upper->notify(buffer,e.bytes - 1);
 				M = !M;
 				_state = BackoffRelay;
-				set_backoff();
-				std::cout << "indo para BackoffRelay from BackoffRelay\n";
+
     		}
     		break;
     }
 }
 
-void ARQ::send(char *buffer, int bytes) {
-	//-----------para debug apenas
-		printf("ARQ recebeu para enviar: ");
-	    print_buffer(buffer,bytes);
-	//----------------------------
-	Evento ev = Evento(Payload,buffer,bytes);
-	enable_timeout();
-	handle_fsm(ev);
-}
-
-void ARQ::set_backoff() {
-//	 set_timeout(TIMEOUT_BACKOFF);
-	tout = TIMEOUT_BACKOFF;
-}
-
 void ARQ::notifyERR() {
 
 }
+void ARQ::init() {
+	if(not _lower->is_enabled()){
+		_lower->init();
+	}
+	enable();
+	printf("ARQ habilitado\n");
 
+}

@@ -47,23 +47,18 @@ Framming::Framming(Serial &dev, int max_bytes, long tout) : _port(dev), Layer(de
     _state = Idle;
 	recebeu_completo = false;
     disable_timeout();
+    disable();
 }
 
 Framming::~Framming() {
 }
+
 
 void Framming::send(char *buffer, int bytes) {
 	char send_buf[1026], buf_crc[1026];
 	memset(send_buf, 0, sizeof(send_buf));
 	memset(buf_crc, 0, sizeof(send_buf));
 	memcpy(buf_crc,buffer,bytes);
-
-
-//-----------para debug apenas
-	printf("Framming Recebeu para enviar: ");
-    print_buffer(buffer,bytes);
-//----------------------------
-
     _gen_crc(buf_crc, bytes);
 	send_buf[0] = FLAG;
     int size = 1;
@@ -200,4 +195,10 @@ uint16_t Framming::_pppfcs16(uint16_t fcs, char * cp, int len) {
 	return fcs;
 }
 
+void Framming::init() {
+	char by;
+	while(_port.read((char*) &by, 1, false) != 0); //limpa buffer do fd
+	enable();
+	printf("Framing habilitado\n");
 
+}
