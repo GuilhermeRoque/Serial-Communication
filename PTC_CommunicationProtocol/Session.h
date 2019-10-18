@@ -27,6 +27,7 @@ public:
     void notifyERR();
     void notifyStart();
     void notifyStop();
+    void log_print(char *message);
 
     void handle();
     void handle_timeout();

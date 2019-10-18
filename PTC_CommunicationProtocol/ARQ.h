@@ -31,6 +31,8 @@ class ARQ : public Layer {
     void handle();
     void handle_timeout();
 
+    void disable();
+
  private:
   enum TipoEvento {Payload, Quadro, Timeout};
   enum States {Idle, WaitAck, BackoffAck, BackoffRelay};

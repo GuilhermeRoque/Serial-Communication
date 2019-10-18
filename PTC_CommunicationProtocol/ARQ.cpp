@@ -220,3 +220,8 @@ void ARQ::init() {
 	//printf("ARQ habilitado\n");
 
 }
+
+void ARQ::disable() {
+	M = N = 0;
+	enabled = false;
+}
