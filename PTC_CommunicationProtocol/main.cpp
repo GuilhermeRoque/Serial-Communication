@@ -11,16 +11,27 @@
 using namespace std;
 
 int main(int argc, char ** argv) {
-	if(argc < 2){
-		cout <<"Especifique FD\n"<<endl;
+	uint8_t id_sessao;
+	if(argc < 3){
+		printf("Utilize a seguinte sintaxe para execucao:\n");
+		printf("./PTC_CommunicationProtocol <FD_serial> <id_sessao>\n");
+		printf("Ex.: ./PTC_CommunicationProtocol /dev/pts/3 55\n");
 		return -1;
 	}
+
+	try {
+		id_sessao = (uint8_t) atoi(argv[2]);
+	} catch (int e) {
+		printf("%% Informe um numero entre 0 e 255 para o ID da sessao.\n");
+		return -1;
+	}
+
 	char * path = argv[1];
 
 	Serial rf(path, B9600);
     Framming framming(rf, 1026, 1000); //agr tem mais 2 bytes de ctrl então é 1026
-    ARQ arq(TIMEOUT_ACK);
-    Session sessao(TIMEOUT_SESSION);
+    ARQ arq(TIMEOUT_ACK, id_sessao);
+    Session sessao(-1, TIMEOUT_SESSION, id_sessao);
     App app(0,5000);
 //    Tun tun("ptc_iface", "10.10.10.2", "10.10.10.1");
 //    tun.start();

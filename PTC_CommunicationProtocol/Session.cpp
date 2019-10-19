@@ -15,7 +15,7 @@ Session::Session(int fd, long tout) : Layer(fd, tout) {
 	disable_timeout();
 	srand (time(NULL));
 	//id = rand()%0xFF;
-	id = 0xAA;
+//	id = 0xAA;
 }
 
 Session::Session(long tout) : Layer(tout) {
@@ -24,7 +24,11 @@ Session::Session(long tout) : Layer(tout) {
 	disable();
 	disable_timeout();
 	//id = rand()%0xFF;
-	id = 0xAA;
+//	id = 0xAA;
+}
+
+Session::Session(int fd, long tout, uint8_t id_sessao) : Session(fd, tout) {
+	id = (char) id_sessao;
 }
 
 Session::~Session() {}

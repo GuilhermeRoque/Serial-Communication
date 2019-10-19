@@ -13,11 +13,12 @@
 #include <queue>
 
 #define TIMEOUT_BACKOFF 1 // millisegundos
-#define TIMEOUT_ACK 3000 // millisegundos
+#define TIMEOUT_ACK 1000 // millisegundos
 
 class ARQ : public Layer {
  public:
     ARQ(long tout);
+    ARQ(long tout, uint8_t id_sessao);
     ~ARQ();
     void init();
     void close() {};
@@ -39,6 +40,7 @@ class ARQ : public Layer {
   States _state;
   bool M,N;
   int retry_counter;
+  char id_sessao;
 
   bool is_ACK(uint8_t byte);
   bool is_DATA(uint8_t byte);

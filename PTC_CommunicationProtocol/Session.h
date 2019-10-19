@@ -19,6 +19,7 @@ class Session: public Layer {
 public:
 	Session(int fd, long tout);
 	Session(long tout);
+	Session(int fd, long tout, uint8_t id_sessao);
 	virtual ~Session();
 
     void send(char * buffer, int bytes);

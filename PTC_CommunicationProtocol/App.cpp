@@ -23,9 +23,11 @@ void App::notify(char * buffer, int len){
 }
 
 void App::handle(){
-	int n = read(tty_fd, buffer, 1024);
+	buffer[0] = 0x00;
+	int n = read(tty_fd, buffer+1, 1023);
+	n++;
 	if(_lower->is_enabled()){
-		if(n-1 == 4 and buffer[0] == 'q' and buffer[1] == 'u' and buffer[2] == 'i' and buffer[3] == 't'){
+		if(n-1 == 5 and buffer[1] == 'q' and buffer[2] == 'u' and buffer[3] == 'i' and buffer[4] == 't'){
 			_lower->close();
 		}
 		else{

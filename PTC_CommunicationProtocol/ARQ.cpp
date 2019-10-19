@@ -21,6 +21,10 @@ ARQ::ARQ(long tout):Layer(tout) {
 	}
 }
 
+ARQ::ARQ(long tout, uint8_t id_sessao) : ARQ(tout) {
+	this->id_sessao = (char) id_sessao;
+ }
+
 ARQ::~ARQ() {
 }
 
@@ -36,10 +40,14 @@ bool ARQ::check_SEQ(uint8_t byte,bool bit){
 
 
 void ARQ::notify(char * buffer, int len) {
-	//-----------para debug apenas
-		//printf("ARQ recebeu do Framming: ");
-	    //print_buffer(buffer,len);
-	//----------------------------
+//	-----------para debug apenas
+//		printf("ARQ recebeu do Framming: ");
+//	    print_buffer(buffer,len);
+//	----------------------------
+
+	// Descarta pacotes com id sessao diferente
+	if (buffer[1] != id_sessao)
+		return;
 
 	Evento ev = Evento(Quadro,buffer,len);
 	handle_fsm(ev);
@@ -89,9 +97,11 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM !ackM app!payload M=M/)
     		else if(e.tipo == Quadro and  is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)){
-    			char buffer_ACK[1];
+    			char buffer_ACK[3];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
-    			_lower->send(buffer_ACK,1);
+    			buffer_ACK[1] = id_sessao;
+    			buffer_ACK[2] = e.ptr[2];
+    			_lower->send(buffer_ACK,3);
 
     			M = !M;
     			_state = Idle;
@@ -103,9 +113,11 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM/ !ackM/
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){
-    			char buffer[1];
+    			char buffer[3];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
-    			_lower->send(buffer,1);
+    			buffer[1] = id_sessao;
+    			buffer[2] = e.ptr[2];
+    			_lower->send(buffer,3);
     			_state = Idle;
     		}
     		break;
@@ -120,9 +132,11 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM !ackM app!payload M=M/
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)){
-    			char buffer_ACK[1];
+    			char buffer_ACK[3];
     			buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
-    			_lower->send(buffer_ACK,1);
+    			buffer_ACK[1] = id_sessao;
+    			buffer_ACK[2] = e.ptr[2];
+    			_lower->send(buffer_ACK,3);
 
     			M = !M;
     			_state = WaitAck;
@@ -134,9 +148,11 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM/ !ackM/
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){
-    			char buffer[1];
+    			char buffer[3];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
-    			_lower->send(buffer,1);
+    			buffer[1] = id_sessao;
+    			buffer[2] = e.ptr[2];
+    			_lower->send(buffer,3);
     			_state = WaitAck;
     		}
     		// ?timeout or ?ackN/ !dataN/ set_backoff
@@ -170,9 +186,11 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM !ackM !M=M/
     		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)) {
-				char buffer_ACK[1];
+				char buffer_ACK[3];
 				buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
-				_lower->send(buffer_ACK,1);
+				buffer_ACK[1] = id_sessao;
+				buffer_ACK[2] = e.ptr[2];
+				_lower->send(buffer_ACK,3);
 
 				M = !M;
 				_state = BackoffAck;
@@ -193,9 +211,11 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM !ackM app!payload M=M/
     		else if (e.tipo == Quadro and is_DATA(ctrl_byte) and check_SEQ(ctrl_byte,M)) {
-				char buffer_ACK[1];
+				char buffer_ACK[3];
 				buffer_ACK[0] = M?0x88:0x80; //Quadro de ACK e sequência M
-				_lower->send(buffer_ACK,1);
+				buffer_ACK[1] = id_sessao;
+				buffer_ACK[2] = e.ptr[2];
+				_lower->send(buffer_ACK,3);
 
 				M = !M;
 				_state = BackoffRelay;
