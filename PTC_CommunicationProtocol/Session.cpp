@@ -87,9 +87,18 @@ void Session::handle_fsm(Evento & e) {
 
 	//?Erro --Comportamento padrão para todos os estados
 	if(e.tipo == Erro){
-		_state = DISC;
-		disable();
-		_lower->disable();
+		_lower->disable(); // disable pra retornar o numero sequencia do ARQ
+		if (_state == HALF1 || _state == HALF2) {
+			_state = DISC;
+			disable();
+		} else {
+			_state = HAND1;
+			_lower->enable();
+
+			// ! CR
+			char buffer[3] = {id,(char)Session_Proto,CR};
+			_lower->send(buffer,3);
+		}
 		//std::cout <<"Erro no controle de sessão, desconectando...");
 		return;
 	}
