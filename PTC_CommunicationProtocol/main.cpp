@@ -59,7 +59,7 @@ int main(int argc, char ** argv) {
 		sessao.set_upper(&ctun);
 		ctun.set_lower(&sessao);
 		sched.adiciona(&ctun);
-//		ctun.init();
+		ctun.init();
 		sched.despache();
     }
 

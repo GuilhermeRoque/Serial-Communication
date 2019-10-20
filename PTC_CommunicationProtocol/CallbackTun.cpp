@@ -18,6 +18,7 @@ CallbackTun::~CallbackTun() {
 }
 
 void CallbackTun::init() {
+	_lower->init();
 }
 
 void CallbackTun::close() {
@@ -41,7 +42,7 @@ void CallbackTun::notify(char * buffer, int len) {
 		TunFrame f(buffer+1, len-1, 0x86dd);
 		_tun.send_frame(&f);
 	} else {
-		printf("% Protocolo desconhecido.\n");
+		printf("%% Protocolo desconhecido.\n");
 		return;
 	}
 }
@@ -66,7 +67,7 @@ void CallbackTun::handle() {
 	else if (proto == 0x86dd) {
 		buf[0] = 0x02;
 	} else {
-		printf("% Protocolo (ethertype) desconhecido. Descartando ... \n");
+		printf("%% Protocolo (ethertype) desconhecido. Descartando ... \n");
 		delete f;
 		return;
 	}
