@@ -92,12 +92,12 @@ void Session::handle_fsm(Evento & e) {
 			_state = DISC;
 			disable();
 		} else {
+			// Vai pro HAND1 sem mandar CR. Somente vai enviar novo CR quando
+			// ocorrer um timeout
 			_state = HAND1;
+			reload_timeout();
+			enable_timeout();
 			_lower->enable();
-
-			// ! CR
-			char buffer[3] = {id,(char)Session_Proto,CR};
-			_lower->send(buffer,3);
 		}
 		//std::cout <<"Erro no controle de sessão, desconectando...");
 		return;
@@ -127,12 +127,22 @@ void Session::handle_fsm(Evento & e) {
 			char buffer[3] = {id,(char)Session_Proto,CC};
 			_state = HAND2;
 			_lower->send(buffer,3);
+			reload_timeout();
+			enable_timeout();
 			log_print("[SESSION]GOTO HAND2");
 		}
 		//?CC ->HAND3
 		else if(e.tipo==Controle and e.ptr[2] == CC){
 			_state = HAND3;
+			reload_timeout();
+			enable_timeout();
 			log_print("[SESSION]GOTO HAND3");
+		} else if (e.tipo==Timeout) {
+			_state = HAND1;
+
+			// ! CR
+			char buffer[3] = {id,(char)Session_Proto,CR};
+			_lower->send(buffer,3);
 		}
 		break;
 	case HAND2:

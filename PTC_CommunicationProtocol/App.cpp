@@ -19,6 +19,8 @@ void App::notify(char * buffer, int len){
 	//-----------para debug apenas
 		printf("App recebeu: ");
 	    print_buffer(buffer,len);
+	    printf("App traducao: ");
+	    print_buffer_ascii(buffer, len);
 	//----------------------------
 }
 

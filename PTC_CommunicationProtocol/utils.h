@@ -11,5 +11,6 @@
 #include <iostream>
 
 void print_buffer(char * ptr,int n);
+void print_buffer_ascii(char * ptr, int n);
 
 #endif /* UTILS_H_ */

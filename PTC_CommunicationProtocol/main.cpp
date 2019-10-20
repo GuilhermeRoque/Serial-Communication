@@ -15,7 +15,7 @@ int main(int argc, char ** argv) {
 	if(argc != 3 && argc != 5){
 		printf("Utilize a seguinte sintaxe para execucao:\n");
 		printf("./PTC_CommunicationProtocol <FD_serial> <id_sessao> <IP_origem> <IP_destino>\n");
-		printf("Ex.: ./PTC_CommunicationProtocol /dev/pts/3 55 10.10.10.1 10.10.10.2\n\n\n");
+		printf("Ex.: ./PTC_CommunicationProtocol /dev/pts/3 55 10.10.10.1 10.10.10.2\n\n");
 
 		printf("Obs.: caso nao seja informado o IP de origem e destino, sera inicializada a fake layer no lugar da TUN.\n");
 		return -1;
@@ -51,6 +51,7 @@ int main(int argc, char ** argv) {
     	app.set_lower(&sessao);
     	sched.adiciona(&app);
     	app.init();
+    	sched.despache();
     } else {
 		Tun tun("ptc_iface", argv[3], argv[4]);
 		tun.start();
@@ -58,10 +59,10 @@ int main(int argc, char ** argv) {
 		sessao.set_upper(&ctun);
 		ctun.set_lower(&sessao);
 		sched.adiciona(&ctun);
-		ctun.init();
+//		ctun.init();
+		sched.despache();
     }
 
-    sched.despache();
 
     return 0;
 }
