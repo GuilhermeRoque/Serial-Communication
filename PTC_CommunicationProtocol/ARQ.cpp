@@ -9,13 +9,8 @@
 
 ARQ::ARQ(long tout, uint8_t id_sessao,bool log) : Layer(tout),id_sessao(id_sessao),log(log) {
 	disable_timeout();
-	M = 0;
-	N = 0;
-	_state = Idle;
-	bytes_tx = 0;
-	memset(buffer_tx,0,1026);
-	retry_counter = 0;
 	disable();
+	clean();
 	while(not buffer_ev.empty()){
 		buffer_ev.pop();
 	}
@@ -152,9 +147,7 @@ void ARQ::handle_fsm(Evento & e) {
     			else
     				if(log) log_print("[ARQ] Erro no num de seq! Reenviando pacote..");
     			if (retry_counter == 3) {
-    				retry_counter = 0;
-					disable_timeout();
-					_state = Idle;
+    				clean();
     				_upper->notifyERR();
     			} else {
     				set_timeout(TIMEOUT_BACKOFF);
@@ -223,14 +216,20 @@ void ARQ::handle_fsm(Evento & e) {
 void ARQ::notifyERR() {
 
 }
+
+void ARQ::clean() {
+	M = 0;
+	N = 0;
+	_state = Idle;
+	bytes_tx = 0;
+	memset(buffer_tx,0,1026);
+	retry_counter = 0;
+	disable_timeout();
+}
+
 void ARQ::init() {
 	if(not _lower->is_enabled()){
 		_lower->init();
 	}
 	enable();
-}
-
-void ARQ::disable() {
-	M = N = 0;
-	enabled = false;
 }

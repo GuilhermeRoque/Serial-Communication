@@ -30,10 +30,8 @@ class ARQ : public Layer {
     // métodos de callback ... chamados pelo poller
     void handle();
     void handle_timeout();
-
-    void disable();
-
  private:
+  void clean();
   enum TipoEvento {Payload, Quadro, Timeout};
   enum States {Idle, WaitAck, BackoffAck, BackoffRelay};
   States _state;
