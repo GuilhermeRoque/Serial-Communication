@@ -46,7 +46,6 @@ void App::handle_timeout(){
 	if(not _lower->is_enabled()){
 		_lower->init();
 	}else{
-		printf("Conectado!!\n");
 		disable_timeout();
 	}
 }

@@ -40,7 +40,7 @@ uint16_t Framming::_fcstab[256] = {
 };
 
 
-Framming::Framming(Serial &dev, int max_bytes, long tout) : _port(dev), Layer(dev.get(), tout) {
+Framming::Framming(Serial &dev, int max_bytes, long tout,bool log) : _port(dev), Layer(dev.get(), tout),log(log) {
     _max_bytes = max_bytes;
     _nbytes = 0;
     memset(_buffer, 0, sizeof(_buffer));
@@ -74,13 +74,7 @@ void Framming::send(char *buffer, int bytes) {
         }
     }
 	send_buf[size++] = FLAG;
-
-	//-----------para debug apenas
-		printf("Framming Enviando: ");
-	    print_buffer(send_buf,size);
-	//----------------------------
-
-	    _port.write(send_buf, size);
+	_port.write(send_buf, size);
 }
 
 void Framming::notify(char * buffer, int len) {}
@@ -92,10 +86,6 @@ void Framming::handle() {
 
     Event ev(b);
     if (_handle_fsm(ev)) {
-    	//-----------para debug apenas
-    		printf("Framming recebeu da serial: ");
-    	    print_buffer(_buffer,_nbytes);
-    	//----------------------------
     	if (_check_crc(_buffer, _nbytes-2)) {
             int no_crc_size = _nbytes-2;
             char notify_msg[1024];
@@ -106,7 +96,7 @@ void Framming::handle() {
             memset(_buffer, 0, sizeof(_buffer));
         }
     	else{
-    		printf("Framming: ERRO no QUADRO\n");
+    		if(log)log_print("[Framming] ERRO no QUADRO! Descartando..");
     	}
     }
 }
@@ -199,6 +189,4 @@ void Framming::init() {
 	char by;
 	while(_port.read((char*) &by, 1, false) != 0); //limpa buffer do fd
 	enable();
-	printf("Framing habilitado\n");
-
 }

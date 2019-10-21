@@ -7,7 +7,7 @@
 
 #include "ARQ.h"
 
-ARQ::ARQ(long tout):Layer(tout) {
+ARQ::ARQ(long tout, uint8_t id_sessao,bool log) : Layer(tout),id_sessao(id_sessao),log(log) {
 	disable_timeout();
 	M = 0;
 	N = 0;
@@ -19,10 +19,6 @@ ARQ::ARQ(long tout):Layer(tout) {
 	while(not buffer_ev.empty()){
 		buffer_ev.pop();
 	}
-}
-
-ARQ::ARQ(long tout, uint8_t id_sessao) : ARQ(tout) {
-	this->id_sessao = (char) id_sessao;
  }
 
 ARQ::~ARQ() {
@@ -40,15 +36,11 @@ bool ARQ::check_SEQ(uint8_t byte,bool bit){
 
 
 void ARQ::notify(char * buffer, int len) {
-//	-----------para debug apenas
-//		printf("ARQ recebeu do Framming: ");
-//	    print_buffer(buffer,len);
-//	----------------------------
-
 	// Descarta pacotes com id sessao diferente
-	if (buffer[1] != id_sessao)
+	if (buffer[1] != id_sessao){
+		if(log)log_print("[ARQ] ID de SESSAO invalido! Descartando..");
 		return;
-
+	}
 	Evento ev = Evento(Quadro,buffer,len);
 	handle_fsm(ev);
 }
@@ -60,10 +52,6 @@ void ARQ::handle_timeout() {
 	handle_fsm(ev);
 }
 void ARQ::send(char *buffer, int bytes) {
-	//-----------para debug apenas
-		//printf("ARQ recebeu para enviar: ");
-	    //print_buffer(buffer,bytes);
-	//----------------------------
 	Evento ev = Evento(Payload,buffer,bytes);
 	if(_state == Idle){
     	handle_fsm(ev);
@@ -90,7 +78,6 @@ void ARQ::handle_fsm(Evento & e) {
 	uint8_t ctrl_byte = e.ptr[0];
 	switch (_state) {
     	case Idle:
-    		//printf("[ARQ]IN IDLE %d \n",e.tipo);
     		// app?payload !dataN !enable_timeout
     		if(e.tipo == Payload){
     			send_payload(e);
@@ -113,6 +100,7 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM/ !ackM/
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){
+    			if(log) log_print("[ARQ] Erro no numero de seq! Repetindo ACK..");
     			char buffer[3];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
     			buffer[1] = id_sessao;
@@ -148,6 +136,7 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?dataM/ !ackM/
     		else if(e.tipo == Quadro and is_DATA(ctrl_byte) and not check_SEQ(ctrl_byte,M)){
+    			if(log) log_print("[ARQ] Erro no numero de seq! Repetindo ACK..");
     			char buffer[3];
     			buffer[0] = M?0x80:0x88; //Quadro de ACK e sequência M/
     			buffer[1] = id_sessao;
@@ -157,6 +146,11 @@ void ARQ::handle_fsm(Evento & e) {
     		}
     		// ?timeout or ?ackN/ !dataN/ set_backoff
     		else if((e.tipo == Quadro and is_ACK(ctrl_byte) and not check_SEQ(ctrl_byte,N)) or e.tipo == Timeout){
+    			if(e.tipo == Timeout){
+    				if(log) log_print("[ARQ] Timeout! Reenviando pacote..");
+    			}
+    			else
+    				if(log) log_print("[ARQ] Erro no num de seq! Reenviando pacote..");
     			if (retry_counter == 3) {
     				retry_counter = 0;
 					disable_timeout();
@@ -171,13 +165,11 @@ void ARQ::handle_fsm(Evento & e) {
     		break;
 
     	case BackoffAck:
-       		//printf("[ARQ] IN BackoffAck %d\n",e.tipo);
     		// backoff/
     		if (e.tipo == Timeout) {
 				if(not buffer_ev.empty()){
 					Evento a = buffer_ev.front();
 					buffer_ev.pop();
-					//std::cout<<"[ARQ] Enviando oq faltou\n";
 					send_payload(a);
 				}else{
 					_state = Idle;
@@ -202,7 +194,6 @@ void ARQ::handle_fsm(Evento & e) {
     		break;
 
     	case BackoffRelay:
-       		//printf("[ARQ] IN BackoffRelay %d\n",e.tipo);
     		// ?backoff !dataN !reload_timeout()
     		if (e.tipo == Timeout) {
 				_lower->send(buffer_tx,bytes_tx); //passa pro Framming
@@ -237,8 +228,6 @@ void ARQ::init() {
 		_lower->init();
 	}
 	enable();
-	//printf("ARQ habilitado\n");
-
 }
 
 void ARQ::disable() {

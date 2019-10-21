@@ -20,7 +20,7 @@
 
 class Framming : public Layer {
 public:
-    Framming(Serial & dev, int max_bytes, long tout);
+    Framming(Serial & dev, int max_bytes, long tout,bool log);
     ~Framming();
 
 
@@ -44,7 +44,7 @@ private:
     int _max_bytes; // tamanhos mínimo e máximo de quadro
     Serial & _port;
     char _buffer[4096]; // quadros no maximo de 4 kB (hardcoded)
-
+    bool log;
     enum States {Idle, RX, ESC};
 
     // tipos de eventos associados à serial

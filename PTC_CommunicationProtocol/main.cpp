@@ -12,10 +12,10 @@ using namespace std;
 
 int main(int argc, char ** argv) {
 	uint8_t id_sessao;
-	if(argc != 3 && argc != 5){
+	if(argc != 4 && argc != 6){
 		printf("Utilize a seguinte sintaxe para execucao:\n");
-		printf("./PTC_CommunicationProtocol <FD_serial> <id_sessao> <IP_origem> <IP_destino>\n");
-		printf("Ex.: ./PTC_CommunicationProtocol /dev/pts/3 55 10.10.10.1 10.10.10.2\n\n");
+		printf("./PTC_CommunicationProtocol <FD_serial> <id_sessao> <print_log> <IP_origem> <IP_destino>\n");
+		printf("Ex.: ./PTC_CommunicationProtocol /dev/pts/3 55 true 10.10.10.1 10.10.10.2\n\n");
 
 		printf("Obs.: caso nao seja informado o IP de origem e destino, sera inicializada a fake layer no lugar da TUN.\n");
 		return -1;
@@ -29,11 +29,13 @@ int main(int argc, char ** argv) {
 	}
 
 	char * path = argv[1];
+	char * print_log = argv[3];
+	bool log = memcmp("true",print_log,5)==0;
 
 	Serial rf(path, B9600);
-    Framming framming(rf, 1026, 1000); //agr tem mais 2 bytes de ctrl então é 1026
-    ARQ arq(TIMEOUT_ACK, id_sessao);
-    Session sessao(-1, TIMEOUT_SESSION, id_sessao);
+    Framming framming(rf, 1026, 1000,log); //agr tem mais 2 bytes de ctrl então é 1026
+    ARQ arq(TIMEOUT_ACK, id_sessao,log);
+    Session sessao(-1,TIMEOUT_SESSION, id_sessao,log);
 
     framming.set_upper(&arq);
     arq.set_lower(&framming);
@@ -45,7 +47,7 @@ int main(int argc, char ** argv) {
     sched.adiciona(&arq);
     sched.adiciona(&sessao);
 
-    if (argc == 3) {
+    if (argc == 4) {
     	App app(0,5000);
     	sessao.set_upper(&app);
     	app.set_lower(&sessao);
@@ -53,7 +55,7 @@ int main(int argc, char ** argv) {
     	app.init();
     	sched.despache();
     } else {
-		Tun tun("ptc_iface", argv[3], argv[4]);
+		Tun tun("ptc_iface", argv[4], argv[5]);
 		tun.start();
 		CallbackTun ctun(tun, 5000);
 		sessao.set_upper(&ctun);
@@ -62,7 +64,6 @@ int main(int argc, char ** argv) {
 		ctun.init();
 		sched.despache();
     }
-
 
     return 0;
 }

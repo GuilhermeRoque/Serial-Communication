@@ -12,14 +12,14 @@
 #include <iostream>
 #include "utils.h"
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 #define Session_Proto 0xFF
 #define TIMEOUT_SESSION 10000 // millisegundos
-
 class Session: public Layer {
 public:
-	Session(int fd, long tout);
-	Session(long tout);
-	Session(int fd, long tout, uint8_t id_sessao);
+	Session(int fd, long tout, uint8_t id_sessao,bool log);
+	Session(long tout, uint8_t id_sessao,bool log);
 	virtual ~Session();
 
     void send(char * buffer, int bytes);
@@ -28,17 +28,18 @@ public:
     void notifyERR();
     void notifyStart();
     void notifyStop();
-    void log_print(char *message);
-
     void handle();
     void handle_timeout();
     void init();
     void close();
 
 private:
+    void get_ascii_ctrl(char* ascii,char byte);
+    void get_ascii_state(char* ascii,char byte);
+    bool log;
 	enum TipoEvento {Payload, Quadro, Timeout, Controle,Erro,Start,Stop};
-	enum States {DISC, HAND1, HAND2, HAND3, CON, CHECK, HALF1, HALF2};
 	enum SessionAct {CR,CC,KR,KC,DR,DC};
+	enum States {DISC, HAND1, HAND2, HAND3, CON, CHECK, HALF1, HALF2};
 	States _state;
 	char buffer_tx[1026];
 	int bytes_tx;

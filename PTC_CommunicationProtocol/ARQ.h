@@ -17,8 +17,7 @@
 
 class ARQ : public Layer {
  public:
-    ARQ(long tout);
-    ARQ(long tout, uint8_t id_sessao);
+    ARQ(long tout, uint8_t id_sessao,bool log);
     ~ARQ();
     void init();
     void close() {};
@@ -41,7 +40,7 @@ class ARQ : public Layer {
   bool M,N;
   int retry_counter;
   char id_sessao;
-
+  bool log;
   bool is_ACK(uint8_t byte);
   bool is_DATA(uint8_t byte);
   bool check_SEQ(uint8_t byte,bool bit);
