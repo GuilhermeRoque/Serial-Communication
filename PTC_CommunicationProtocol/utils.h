@@ -11,7 +11,7 @@
 #include <iostream>
 #include <string.h>
 #include "Session.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <time.h>
 
 void print_buffer(char * ptr,int n);
 void print_buffer_ascii(char * ptr, int n);

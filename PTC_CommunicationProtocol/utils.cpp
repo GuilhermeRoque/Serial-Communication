@@ -23,20 +23,16 @@ void print_buffer_ascii(char * ptr, int n) {
 }
 
 void log_print(const char *fmt, ...) {
-    const boost::posix_time::ptime now =
-        boost::posix_time::microsec_clock::local_time();
+	time_t sec;
+	time(&sec);
+	struct tm *time_now = localtime(&sec);
 
-    const boost::posix_time::time_duration td = now.time_of_day();
-
-    const long hours        = td.hours();
-    const long minutes      = td.minutes();
-    const long seconds      = td.seconds();
-    const long milliseconds = td.total_milliseconds() -
-                              ((hours * 3600 + minutes * 60 + seconds) * 1000);
+	const long hours = time_now->tm_hour;
+	const long minutes = time_now->tm_min;
+	const long seconds = time_now->tm_sec;
 
     char buf[40];
-    sprintf(buf, "%02ld:%02ld:%02ld.%03ld",
-        hours, minutes, seconds, milliseconds);
+    sprintf(buf, "%02ld:%02ld:%02ld", hours, minutes, seconds);
 
     char message[255];
 	va_list args;
